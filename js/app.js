@@ -1,10 +1,10 @@
 /**
- * Azure Broadcast App - Main Application v2.2
+ * Azure Broadcast App - Main Application v2.3
  * Integrates with Microsoft Dataverse for broadcast scheduling and news
- * UPDATED: Fixed video looping + Enhanced Dataverse news integration - Version 2.2
+ * COMPLETE: Video looping fixed + Enhanced news + Long blob URL support - Version 2.3
  */
 
-console.log('🚀 Loading Azure Broadcast App v2.2 - PowerAI Edition (News + Video Fix)');
+console.log('🚀 Loading Azure Broadcast App v2.3 - PowerAI Edition (Complete)');
 
 // Configuration
 const msalConfig = {
@@ -23,7 +23,7 @@ const dataverseConfig = {
     webApiEndpoint: 'https://beredskap360utv.api.crm4.dynamics.com/api/data/v9.2',
     environmentId: 'd17c0905-0627-e2c7-991f-02c12daadd44',
     organizationId: '2061523f-6d02-f011-b015-0022489e5943',
-    tablePrefix: 'powerai_' // Explicit prefix definition
+    tablePrefix: 'powerai_'
 };
 
 // Initialize MSAL
@@ -33,7 +33,7 @@ let msalInstance;
 try {
     if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
         msalInstance = new msal.PublicClientApplication(msalConfig);
-        console.log('✅ MSAL instance created successfully (v2.2)');
+        console.log('✅ MSAL instance created successfully (v2.3)');
     } else {
         console.error('❌ MSAL library not properly loaded');
     }
@@ -43,7 +43,7 @@ try {
 
 class AzureBroadcastApp {
     constructor() {
-        console.log('🎬 Initializing AzureBroadcastApp v2.2 - PowerAI Edition (News + Video Fix)...');
+        console.log('🎬 Initializing AzureBroadcastApp v2.3 - PowerAI Edition (Complete)...');
         
         // Check MSAL availability
         if (!msalInstance) {
@@ -100,7 +100,7 @@ class AzureBroadcastApp {
         };
 
         this.newsItems = [
-            'Azure Broadcast System v2.2 initialiseres...'
+            'Azure Broadcast System v2.3 initialiseres...'
         ];
         this.currentNewsIndex = 0;
         
@@ -109,12 +109,13 @@ class AzureBroadcastApp {
 
     async init() {
         try {
-            console.log('🚀 Azure Broadcast App v2.2 starter...');
+            console.log('🚀 Azure Broadcast App v2.3 starter...');
             console.log('🌍 Environment: Production (Azure Static Web App)');
             console.log('🔗 Dataverse Endpoint:', dataverseConfig.webApiEndpoint);
             console.log('🏷️ Table Prefix:', dataverseConfig.tablePrefix);
-            console.log('🎥 Video Looping: FIXED (v2.2)');
-            console.log('📰 Enhanced News Integration: ENABLED (v2.2)');
+            console.log('🎥 Video Looping: FIXED (v2.3)');
+            console.log('📰 Enhanced News Integration: ENABLED (v2.3)');
+            console.log('🔗 Blob URL Support: ENABLED (v2.3)');
             
             this.setupEventListeners();
             await this.handleAuthRedirect();
@@ -214,7 +215,7 @@ class AzureBroadcastApp {
 
     async initializeApp() {
         try {
-            console.log('🚀 Initializing application v2.2...');
+            console.log('🚀 Initializing application v2.3...');
             this.showLoading(true);
             
             // Get access token for Dataverse
@@ -238,9 +239,9 @@ class AzureBroadcastApp {
             this.startNewsRotation();
             
             // Show success message
-            this.showSuccess('✅ Koblet til Azure og Dataverse v2.2!');
+            this.showSuccess('✅ Koblet til Azure og Dataverse v2.3!');
             
-            console.log('✅ Application v2.2 initialized successfully');
+            console.log('✅ Application v2.3 initialized successfully');
             
         } catch (error) {
             console.error('❌ App initialization error:', error);
@@ -301,7 +302,7 @@ class AzureBroadcastApp {
             const tableName = `${dataverseConfig.tablePrefix}broadcastschedules`;
             const query = `${dataverseConfig.webApiEndpoint}/${tableName}?$filter=${dataverseConfig.tablePrefix}isactive eq true&$orderby=${dataverseConfig.tablePrefix}scheduledtime asc&$top=50`;
             
-            console.log('🔍 API Query v2.2:', query);
+            console.log('🔍 API Query v2.3:', query);
             console.log('🏷️ Using table:', tableName);
             
             const response = await fetch(query, { 
@@ -347,7 +348,7 @@ class AzureBroadcastApp {
     }
 
     createDemoSchedule() {
-        console.log('📋 Creating demo schedule v2.2...');
+        console.log('📋 Creating demo schedule v2.3...');
         const now = new Date();
         const demoSchedule = [];
         
@@ -367,7 +368,7 @@ class AzureBroadcastApp {
                 [`${dataverseConfig.tablePrefix}duration`]: 8 + (i % 5) * 2,
                 [`${dataverseConfig.tablePrefix}videourl`]: null,
                 [`${dataverseConfig.tablePrefix}isactive`]: true,
-                [`${dataverseConfig.tablePrefix}description`]: `Demo ${programNames[typeIndex]} - Azure v2.2`,
+                [`${dataverseConfig.tablePrefix}description`]: `Demo ${programNames[typeIndex]} - Azure v2.3`,
                 [`${dataverseConfig.tablePrefix}priority`]: i
             });
         }
@@ -426,6 +427,11 @@ class AzureBroadcastApp {
             
             const programIcon = this.programContent[program[`${prefix}programtype`]]?.icon || '📺';
             
+            // Sjekk om programmet har video URL
+            const hasVideo = program[`${prefix}videourl`] && program[`${prefix}videourl`].trim();
+            const videoIndicator = hasVideo ? '🎥' : '🎨';
+            const videoTitle = hasVideo ? 'Video fra blob storage' : 'Animert program';
+            
             html += `
                 <div style="
                     margin: 8px 0; 
@@ -443,8 +449,9 @@ class AzureBroadcastApp {
                             ${statusText}
                         </span>
                     </div>
-                    <div style="color: white; font-weight: 500; margin-bottom: 3px;">
+                    <div style="color: white; font-weight: 500; margin-bottom: 3px; display: flex; align-items: center; gap: 8px;">
                         ${program[`${prefix}name`]}
+                        <span style="font-size: 0.8rem; opacity: 0.7;" title="${videoTitle}">${videoIndicator}</span>
                     </div>
                     <div style="font-size: 0.85rem; opacity: 0.8; display: flex; justify-content: space-between;">
                         <span>${program[`${prefix}duration`]}s</span>
@@ -453,6 +460,11 @@ class AzureBroadcastApp {
                     ${program[`${prefix}description`] ? `
                         <div style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px; font-style: italic;">
                             ${program[`${prefix}description`]}
+                        </div>
+                    ` : ''}
+                    ${hasVideo ? `
+                        <div style="font-size: 0.75rem; opacity: 0.5; margin-top: 3px; color: #4fc3f7;">
+                            📡 Blob storage video
                         </div>
                     ` : ''}
                 </div>
@@ -563,6 +575,32 @@ class AzureBroadcastApp {
         }
     }
 
+    // New function for URL validation
+    isValidVideoUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            
+            // Check that it's a valid URL
+            if (!urlObj.protocol.startsWith('http')) {
+                return false;
+            }
+            
+            // Check for common video extensions or blob storage patterns
+            const pathname = urlObj.pathname.toLowerCase();
+            const validExtensions = ['.mp4', '.webm', '.avi', '.mov', '.mkv', '.m4v'];
+            const isBlobStorage = urlObj.hostname.includes('.blob.core.windows.net') || 
+                                 urlObj.hostname.includes('.amazonaws.com') ||
+                                 urlObj.hostname.includes('.googleapis.com');
+            
+            // Accept if it's blob storage or has valid video extension
+            return isBlobStorage || validExtensions.some(ext => pathname.includes(ext));
+            
+        } catch (error) {
+            console.log(`❌ URL validation failed: ${error.message}`);
+            return false;
+        }
+    }
+
     async startProgram(program) {
         const prefix = dataverseConfig.tablePrefix;
         console.log(`🎬 Starting program: ${program[`${prefix}name`]}`);
@@ -582,17 +620,22 @@ class AzureBroadcastApp {
             titleElement.textContent = program[`${prefix}name`];
         }
         
-        if (program[`${prefix}videourl`] && program[`${prefix}videourl`].trim()) {
-            console.log(`🎥 Loading video: ${program[`${prefix}videourl`]}`);
-            this.tryLoadRealVideo(program[`${prefix}videourl`], program[`${prefix}programtype`]);
+        // Enhanced URL validation for blob storage
+        const videoUrl = program[`${prefix}videourl`];
+        if (videoUrl && videoUrl.trim() && this.isValidVideoUrl(videoUrl.trim())) {
+            console.log(`🎥 Loading video from blob storage: ${videoUrl.substring(0, 100)}...`);
+            this.tryLoadRealVideo(videoUrl.trim(), program[`${prefix}programtype`]);
         } else {
+            if (videoUrl) {
+                console.log(`⚠️ Invalid video URL format: ${videoUrl.substring(0, 100)}...`);
+            }
             console.log(`🎨 Using animated fallback for: ${program[`${prefix}programtype`]}`);
             this.showAnimatedProgram(program[`${prefix}programtype`]);
         }
         
         this.startProgressBar(program[`${prefix}duration`]);
 
-        // Set program end timeout - Only set once
+        // Set program end timeout
         this.programEndTimeout = setTimeout(() => {
             this.endProgram();
         }, program[`${prefix}duration`] * 1000);
@@ -600,7 +643,7 @@ class AzureBroadcastApp {
         this.updateDataverseStatus(`Sender: ${program[`${prefix}name`]}`);
     }
 
-    // FIXED: Complete video control rewrite
+    // Enhanced video loading with better error handling for blob URLs
     tryLoadRealVideo(videoUrl, programType) {
         const video = document.getElementById('realVideo');
         const animatedProgram = document.getElementById('animatedProgram');
@@ -622,6 +665,8 @@ class AzureBroadcastApp {
         video.onerror = null;
         video.onended = null;
         video.oncanplay = null;
+        video.onloadstart = null;
+        video.onprogress = null;
         
         // Stop and reset video
         video.pause();
@@ -637,14 +682,29 @@ class AzureBroadcastApp {
         video.preload = 'metadata';
         video.disablePictureInPicture = true;
         
-        // Set timeout for fallback
+        // Increased timeout for blob storage (can take longer)
         this.currentVideoTimeout = setTimeout(() => {
-            console.log('⏰ Video loading timeout, using animation fallback');
+            console.log('⏰ Video loading timeout (blob storage), using animation fallback');
             this.showAnimatedProgram(programType);
             this.currentVideoTimeout = null;
-        }, 5000);
+        }, 10000); // 10 seconds for blob storage
         
-        // FIXED: Proper event handlers that prevent looping
+        // Enhanced event handlers
+        video.onloadstart = () => {
+            console.log('📡 Started loading video from blob storage...');
+        };
+        
+        video.onprogress = () => {
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const duration = video.duration;
+                if (duration > 0) {
+                    const bufferedPercent = (bufferedEnd / duration) * 100;
+                    console.log(`📊 Video buffered: ${Math.round(bufferedPercent)}%`);
+                }
+            }
+        };
+        
         video.onended = () => {
             console.log('📺 Video ended naturally - preventing restart');
             video.pause();
@@ -654,7 +714,7 @@ class AzureBroadcastApp {
         };
         
         video.onloadeddata = () => {
-            console.log('✅ Video loaded successfully');
+            console.log('✅ Video loaded successfully from blob storage');
             if (this.currentVideoTimeout) {
                 clearTimeout(this.currentVideoTimeout);
                 this.currentVideoTimeout = null;
@@ -668,13 +728,33 @@ class AzureBroadcastApp {
             video.currentTime = 0;
             
             video.play().catch(e => {
-                console.log('❌ Video autoplay failed:', e.message);
+                console.log(`❌ Video autoplay failed: ${e.message}`);
                 this.showAnimatedProgram(programType);
             });
         };
         
         video.onerror = (e) => {
-            console.log('❌ Video loading failed:', e);
+            const error = video.error;
+            let errorMessage = 'Unknown error';
+            
+            if (error) {
+                switch(error.code) {
+                    case MediaError.MEDIA_ERR_ABORTED:
+                        errorMessage = 'Video loading aborted';
+                        break;
+                    case MediaError.MEDIA_ERR_NETWORK:
+                        errorMessage = 'Network error loading video';
+                        break;
+                    case MediaError.MEDIA_ERR_DECODE:
+                        errorMessage = 'Video decode error';
+                        break;
+                    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                        errorMessage = 'Video format not supported';
+                        break;
+                }
+            }
+            
+            console.log(`❌ Video loading failed: ${errorMessage}`, e);
             if (this.currentVideoTimeout) {
                 clearTimeout(this.currentVideoTimeout);
                 this.currentVideoTimeout = null;
@@ -682,7 +762,8 @@ class AzureBroadcastApp {
             this.showAnimatedProgram(programType);
         };
         
-        // Load the video
+        // Load the video with full URL
+        console.log(`🔗 Setting video source: ${videoUrl.substring(0, 80)}...`);
         video.src = videoUrl;
         video.load();
     }
@@ -709,7 +790,7 @@ class AzureBroadcastApp {
                 <div class="program-icon">${content.icon}</div>
                 <div class="program-title">${content.description}</div>
                 <div class="program-subtitle">${content.subtitle}</div>
-                <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.2</div>
+                <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.3</div>
             </div>
         `;
         
@@ -740,9 +821,8 @@ class AzureBroadcastApp {
         console.log(`📊 Progress bar started for ${duration}s`);
     }
 
-    // FIXED: Complete cleanup in endProgram
     endProgram() {
-        console.log('📺 Ending current program v2.2');
+        console.log('📺 Ending current program v2.3');
         this.isPlayingVideo = false;
         
         // Clear all timeouts
@@ -771,6 +851,8 @@ class AzureBroadcastApp {
             video.oncanplay = null;
             video.onplay = null;
             video.onpause = null;
+            video.onloadstart = null;
+            video.onprogress = null;
             
             // Ensure no looping
             video.loop = false;
@@ -802,7 +884,7 @@ class AzureBroadcastApp {
         console.log('✅ Program ended completely, ready for next broadcast');
     }
 
-    // ENHANCED NEWS INTEGRATION v2.2
+    // ENHANCED NEWS INTEGRATION v2.3
     startNewsRotation() {
         const rotateNews = () => {
             this.currentNewsIndex = (this.currentNewsIndex + 1) % this.newsItems.length;
@@ -812,19 +894,19 @@ class AzureBroadcastApp {
             }
         };
         
-        // Roter nyheter hvert 8. sekund
+        // Rotate news every 8 seconds
         setInterval(rotateNews, 8000);
         
-        // Last inn nyheter ved oppstart
+        // Load news at startup
         this.loadNewsFromDataverse();
         
-        // Oppdater nyheter fra Dataverse hvert 5. minutt
+        // Update news from Dataverse every 5 minutes
         setInterval(() => {
             if (!this.isPlayingVideo && this.accessToken) {
                 console.log('🔄 Auto-refreshing news...');
                 this.loadNewsFromDataverse();
             }
-        }, 5 * 60 * 1000); // 5 minutter
+        }, 5 * 60 * 1000); // 5 minutes
         
         console.log('📰 News rotation started with 5-minute refresh');
     }
@@ -845,7 +927,7 @@ class AzureBroadcastApp {
                 'Accept': 'application/json'
             };
 
-            // Hent aktive nyheter sortert etter prioritet og publiseringsdato
+            // Get active news sorted by priority and publish date
             const now = new Date().toISOString();
             const query = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?` +
                 `$filter=${dataverseConfig.tablePrefix}isactive eq true and ` +
@@ -867,7 +949,7 @@ class AzureBroadcastApp {
                                        item[`${dataverseConfig.tablePrefix}name`] || 
                                        'Nyhetsoppdatering fra Dataverse';
                         
-                        // Legg til kategori-emoji hvis tilgjengelig
+                        // Add category emoji if available
                         const category = item[`${dataverseConfig.tablePrefix}category`];
                         const categoryEmojis = {
                             'Breaking': '🚨',
@@ -883,7 +965,7 @@ class AzureBroadcastApp {
                             newsText = `${categoryEmojis[category]} ${newsText}`;
                         }
                         
-                        // Legg til kilde hvis tilgjengelig
+                        // Add source if available
                         const source = item[`${dataverseConfig.tablePrefix}source`];
                         if (source) {
                             newsText += ` (${source})`;
@@ -896,7 +978,7 @@ class AzureBroadcastApp {
                     console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse`);
                     this.updateDataverseStatus(`${this.newsItems.length} nyheter lastet`);
                     
-                    // Logg nyhetsdetaljer for debugging
+                    // Log news details for debugging
                     console.log('📰 News items loaded:', this.newsItems.slice(0, 3));
                     
                 } else {
@@ -916,23 +998,25 @@ class AzureBroadcastApp {
 
     setFallbackNews() {
         this.newsItems = [
-            '📺 Azure Static Web App Broadcast System v2.2 - Enhanced News Integration',
+            '📺 Azure Static Web App Broadcast System v2.3 - Complete with Blob URL Support',
             '🌐 Norsk TV sender nå direkte fra Microsoft Azure Cloud Platform med PowerAI prefix',
             '🔄 Automatisk program-scheduling og nyhetsoppdateringer fra Dataverse database',
             '🔒 Skalerbar cloud-løsning for broadcast-industrien med enterprise sikkerhet',
             '🔐 Microsoft Authentication og role-based access control for sikker tilgang',
             '📊 Real-time oppdateringer og automatisk failover til demo-data ved tilkoblingsproblemer',
             '🚀 Azure Static Web App deployment med global tilgjengelighet og høy oppetid',
-            '⚡ Integrert med Power Platform for enkel administrasjon av sendeskjema og nyheter'
+            '⚡ Integrert med Power Platform for enkel administrasjon av sendeskjema og nyheter',
+            '🎥 Støtte for lange blob storage URLs med SAS tokens',
+            '📡 Forbedret video-håndtering med timeout og error recovery'
         ];
         
-        console.log('📰 Using fallback news items v2.2');
+        console.log('📰 Using fallback news items v2.3');
     }
 
     // Utility methods
     refreshData() {
         if (!this.isPlayingVideo && this.accessToken) {
-            console.log('🔄 Refreshing data v2.2...');
+            console.log('🔄 Refreshing data v2.3...');
             this.loadBroadcastSchedule();
             this.loadNewsFromDataverse();
         }
@@ -968,14 +1052,14 @@ class AzureBroadcastApp {
     }
 
     initializeDemoMode() {
-        console.log('🎯 Initializing demo mode v2.2...');
+        console.log('🎯 Initializing demo mode v2.3...');
         
         this.showElement('loginScreen', false);
         this.showElement('mainContainer', true);
         
         const userDisplayElement = document.getElementById('userDisplayName');
         if (userDisplayElement) {
-            userDisplayElement.textContent = 'Demo Bruker v2.2';
+            userDisplayElement.textContent = 'Demo Bruker v2.3';
         }
         
         this.startClock();
@@ -984,7 +1068,7 @@ class AzureBroadcastApp {
         this.startScheduleChecker();
         this.startNewsRotation();
         
-        this.updateDataverseStatus('Demo-modus aktiv v2.2');
+        this.updateDataverseStatus('Demo-modus aktiv v2.3');
         this.showError('Kjører i demo-modus - begrensede funksjoner');
     }
 
@@ -995,7 +1079,7 @@ class AzureBroadcastApp {
         });
         const statusElement = document.getElementById('dataverseStatus');
         if (statusElement) {
-            statusElement.textContent = `🔗 Dataverse v2.2: ${status} (${timestamp})`;
+            statusElement.textContent = `🔗 Dataverse v2.3: ${status} (${timestamp})`;
         }
     }
 
@@ -1089,12 +1173,13 @@ window.BroadcastUtils = {
 
 // Safe initialization with cache busting
 (function() {
-    console.log('📦 Azure Broadcast App v2.2 JavaScript loaded successfully (News + Video Fix)');
+    console.log('📦 Azure Broadcast App v2.3 JavaScript loaded successfully (Complete)');
     console.log('🔧 Environment: Production (Cache Busted)');
     console.log('📅 Build date:', new Date().toISOString());
     console.log('🏷️ PowerAI Prefix Support: Enabled');
     console.log('🎥 Video Looping: FIXED');
     console.log('📰 Enhanced News Integration: ENABLED');
+    console.log('🔗 Blob URL Support: ENABLED');
     
     // Verify all required global objects are available
     if (typeof window === 'undefined') {
@@ -1103,9 +1188,9 @@ window.BroadcastUtils = {
     }
     
     // Add cache buster to ensure fresh loading
-    const cacheVersion = 'v2.2-news-videofix-' + new Date().getTime();
+    const cacheVersion = 'v2.3-complete-' + new Date().getTime();
     window.broadcastAppVersion = cacheVersion;
     console.log('🔄 Cache Version:', cacheVersion);
     
-    console.log('✅ App.js v2.2 ready for initialization (News Integration + Video Looping Fixed)');
+    console.log('✅ App.js v2.3 ready for initialization (Complete Version)');
 })();
