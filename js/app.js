@@ -8,7 +8,7 @@
 const msalConfig = {
     auth: {
         clientId: 'e7174676-e8bb-446b-9260-af3f28086458',
-        authority: 'https://login.microsoftonline.com/common',
+        authority: 'https://login.microsoftonline.com/common', // Back to /common since app is now multi-tenant
         redirectUri: window.location.origin
     },
     cache: {
@@ -760,7 +760,7 @@ class AzureBroadcastApp {
                 const data = await response.json();
                 if (data.value && data.value.length > 0) {
                     this.newsItems = data.value.map(item => 
-                        item.cr_headline || item.cr_name || 'Nyhetsoppdatering fra Dataverse'
+                        item.powerai_headline || item.powerai_name || 'Nyhetsoppdatering fra Dataverse'
                     );
                     console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse`);
                 } else {
