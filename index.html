@@ -18,11 +18,9 @@
     <meta property="og:title" content="Norsk TV - Azure Broadcast System">
     <meta property="og:description" content="Professional broadcast system powered by Azure Static Web Apps">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="/assets/og-image.png">
     
     <!-- Favicon -->
     <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
     
     <!-- Preload critical resources -->
     <link rel="preload" href="/css/styles.css" as="style">
@@ -36,8 +34,65 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- Initial loader styles -->
+    <style>
+        .initial-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loader-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .loader-logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .loader-text {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .loader-status {
+            margin-top: 20px;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -46,6 +101,7 @@
             <div class="loader-logo">📺</div>
             <div class="loader-text">Azure Static Web App</div>
             <div class="loader-spinner"></div>
+            <div class="loader-status" id="loaderStatus">Starter applikasjon...</div>
         </div>
     </div>
 
@@ -160,37 +216,85 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <!-- MSAL.js for Microsoft Authentication -->
-    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" 
-            integrity="sha384-..." 
-            crossorigin="anonymous"
-            defer></script>
-    
-    <!-- Main Application Script -->
-    <script src="/js/app.js" defer></script>
-    
-    <!-- Service Worker Registration (for PWA) -->
+    <!-- MSAL.js with multiple fallback CDNs -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                        console.log('✅ Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch(function(error) {
-                        console.log('ℹ️ Service Worker registration failed:', error);
-                    });
-            });
+        console.log('🔄 Loading MSAL.js library...');
+        document.getElementById('loaderStatus').textContent = 'Laster autentisering...';
+        
+        (function() {
+            const msalUrls = [
+                'https://alcdn.msauth.net/browser/2.45.0/js/msal-browser.min.js',
+                'https://unpkg.com/@azure/msal-browser@2.45.0/lib/msal-browser.min.js',
+                'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.45.0/lib/msal-browser.min.js'
+            ];
+            
+            let currentUrl = 0;
+            
+            function loadMsal() {
+                if (currentUrl >= msalUrls.length) {
+                    console.error('❌ Failed to load MSAL from all CDNs');
+                    document.getElementById('loaderStatus').textContent = 'Feil ved lasting av autentisering';
+                    setTimeout(() => {
+                        document.getElementById('loginError').textContent = 'Kunne ikke laste autentiseringsbibliotek. Sjekk internettforbindelsen og prøv igjen.';
+                        hideInitialLoader();
+                    }, 2000);
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = msalUrls[currentUrl];
+                script.defer = true;
+                script.crossOrigin = 'anonymous';
+                
+                script.onload = function() {
+                    console.log('✅ MSAL loaded successfully from:', msalUrls[currentUrl]);
+                    document.getElementById('loaderStatus').textContent = 'Laster applikasjon...';
+                    loadAppScript();
+                };
+                
+                script.onerror = function() {
+                    console.warn('⚠️ Failed to load MSAL from:', msalUrls[currentUrl]);
+                    currentUrl++;
+                    loadMsal();
+                };
+                
+                document.head.appendChild(script);
+            }
+            
+            loadMsal();
+        })();
+        
+        // Load main app script
+        function loadAppScript() {
+            const script = document.createElement('script');
+            script.src = '/js/app.js';
+            script.defer = true;
+            
+            script.onload = function() {
+                console.log('✅ App script loaded successfully');
+                document.getElementById('loaderStatus').textContent = 'Starter applikasjon...';
+                // App will initialize via DOMContentLoaded
+            };
+            
+            script.onerror = function() {
+                console.error('❌ Failed to load app script');
+                document.getElementById('loaderStatus').textContent = 'Feil ved lasting av applikasjon';
+                setTimeout(() => {
+                    document.getElementById('loginError').textContent = 'Kunne ikke laste applikasjon. Sjekk at alle filer er riktig deployet.';
+                    hideInitialLoader();
+                }, 2000);
+            };
+            
+            document.head.appendChild(script);
         }
     </script>
-    
+
     <!-- Application Initialization -->
     <script>
         // Performance monitoring
         const perfStart = performance.now();
         
-        // Hide initial loader once everything is ready
+        // Hide initial loader
         function hideInitialLoader() {
             const loader = document.getElementById('initialLoader');
             if (loader) {
@@ -201,7 +305,7 @@
             }
         }
 
-        // Initialize application - wait for all scripts to load
+        // Initialize application
         function initializeApp() {
             console.log('🚀 Starting Azure Static Web App Broadcast System...');
             console.log('📍 Environment: Production (Static Web App)');
@@ -220,7 +324,7 @@
 
             if (typeof AzureBroadcastApp === 'undefined') {
                 console.error('❌ AzureBroadcastApp class not found');
-                document.getElementById('loginError').textContent = 'Applikasjon ikke lastet. Prøv å oppdatere siden.';
+                document.getElementById('loginError').textContent = 'Applikasjon ikke lastet. Sjekk at js/app.js er tilgjengelig.';
                 hideInitialLoader();
                 return;
             }
@@ -239,27 +343,33 @@
 
         // Wait for DOM and all scripts to be ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM loaded, waiting for scripts...');
+            console.log('📄 DOM loaded, checking script dependencies...');
             
             // Check if scripts are already loaded
             if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
                 initializeApp();
             } else {
-                // Wait a bit for scripts to load
+                // Wait for scripts to load
                 let attempts = 0;
-                const maxAttempts = 10;
+                const maxAttempts = 20; // Increased attempts
                 
                 const checkScripts = setInterval(() => {
                     attempts++;
-                    console.log(`🔍 Checking scripts... attempt ${attempts}/${maxAttempts}`);
+                    console.log(`🔍 Checking dependencies... attempt ${attempts}/${maxAttempts}`);
                     
                     if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
                         clearInterval(checkScripts);
                         initializeApp();
                     } else if (attempts >= maxAttempts) {
                         clearInterval(checkScripts);
-                        console.error('❌ Scripts failed to load after multiple attempts');
-                        document.getElementById('loginError').textContent = 'Kunne ikke laste nødvendige komponenter. Sjekk internettforbindelsen og prøv igjen.';
+                        console.error('❌ Dependencies failed to load after maximum attempts');
+                        
+                        let missingDeps = [];
+                        if (typeof msal === 'undefined') missingDeps.push('MSAL.js');
+                        if (typeof AzureBroadcastApp === 'undefined') missingDeps.push('App.js');
+                        
+                        document.getElementById('loginError').textContent = 
+                            `Kunne ikke laste: ${missingDeps.join(', ')}. Sjekk internettforbindelsen og prøv igjen.`;
                         hideInitialLoader();
                     }
                 }, 500);
@@ -270,7 +380,9 @@
         document.addEventListener('visibilitychange', function() {
             if (window.broadcastApp && !document.hidden) {
                 console.log('👁️ Page focused - refreshing data');
-                window.broadcastApp.refreshData();
+                if (typeof window.broadcastApp.refreshData === 'function') {
+                    window.broadcastApp.refreshData();
+                }
             }
         });
 
@@ -282,7 +394,7 @@
             } else {
                 // Fallback error handling
                 const errorEl = document.getElementById('loginError');
-                if (errorEl) {
+                if (errorEl && !errorEl.textContent) {
                     errorEl.textContent = 'En feil oppstod: ' + (e.error?.message || 'Ukjent feil');
                     errorEl.style.display = 'block';
                 }
@@ -301,7 +413,7 @@
         // Performance logging
         window.addEventListener('load', function() {
             const loadTime = performance.now() - perfStart;
-            console.log(`📊 App initialization time: ${Math.round(loadTime)}ms`);
+            console.log(`📊 Total initialization time: ${Math.round(loadTime)}ms`);
             
             // Log performance metrics
             if (window.performance && window.performance.timing) {
@@ -309,7 +421,7 @@
                 const totalLoadTime = timing.loadEventEnd - timing.navigationStart;
                 const domReadyTime = timing.domContentLoadedEventEnd - timing.navigationStart;
                 
-                console.log(`📊 Total page load: ${totalLoadTime}ms`);
+                console.log(`📊 Page load: ${totalLoadTime}ms`);
                 console.log(`📊 DOM ready: ${domReadyTime}ms`);
             }
         });
@@ -329,62 +441,27 @@
             }
         });
 
-        // Add deployment info to console
+        // Service worker registration (PWA support)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ℹ️ Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Console deployment info
         console.log('%c🎯 Azure Static Web App Deployment Info', 'color: #0078d4; font-weight: bold; font-size: 14px;');
         console.log('   Hosting: Azure Static Web Apps');
         console.log('   CDN: Azure Global Network');
         console.log('   SSL: Automatic (Let\'s Encrypt)');
         console.log('   Deployment: GitHub Actions');
         console.log('   Build Time:', new Date().toISOString());
+        console.log('   Client ID: e7174676-e8bb-446b-9260-af3f28086458');
     </script>
-
-    <!-- Add CSS for initial loader -->
-    <style>
-        .initial-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.3s ease;
-        }
-        
-        .loader-content {
-            text-align: center;
-            color: white;
-        }
-        
-        .loader-logo {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        .loader-text {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-        
-        .loader-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
 </body>
 </html>
