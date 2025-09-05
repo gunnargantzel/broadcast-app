@@ -33,7 +33,7 @@
     "X-Frame-Options": "DENY",
     "X-XSS-Protection": "1; mode=block",
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://alcdn.msauth.net https://login.microsoftonline.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://login.microsoftonline.com https://beredskap360utv.api.crm4.dynamics.com https://globaldisco.crm4.dynamics.com https://*.azurestaticapps.net; font-src 'self' https: data:; media-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self';"
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://alcdn.msauth.net https://alcdn.msftauth.net https://unpkg.com https://cdn.jsdelivr.net https://login.microsoftonline.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; media-src 'self' https://*.blob.core.windows.net https://*.amazonaws.com https://*.googleapis.com blob: data:; connect-src 'self' https://login.microsoftonline.com https://beredskap360utv.api.crm4.dynamics.com https://globaldisco.crm4.dynamics.com https://*.azurestaticapps.net https://*.blob.core.windows.net; font-src 'self' https: data:; object-src 'none'; base-uri 'self'; form-action 'self';"
   },
   "mimeTypes": {
     ".json": "application/json",
