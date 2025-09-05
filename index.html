@@ -3,24 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Norsk Nyhetskanal - Azure Web App</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <meta name="description" content="Azure-basert broadcast system med Dataverse integrasjon">
-    <meta name="keywords" content="azure, broadcast, nyheter, dataverse, microsoft">
+    <title>Norsk Nyhetskanal - Azure Static Web App</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <!-- Meta tags -->
+    <meta name="description" content="Azure Static Web App broadcast system med Dataverse integrasjon">
+    <meta name="keywords" content="azure, static web app, broadcast, nyheter, dataverse, microsoft">
     <meta name="author" content="Azure Broadcast System">
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1e3c72">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Norsk TV - Azure Broadcast System">
+    <meta property="og:description" content="Professional broadcast system powered by Azure Static Web Apps">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="/assets/og-image.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/css/styles.css" as="style">
+    <link rel="preload" href="/js/app.js" as="script">
+    <link rel="preconnect" href="https://alcdn.msauth.net">
+    <link rel="preconnect" href="https://login.microsoftonline.com">
+    <link rel="preconnect" href="https://beredskap360utv.api.crm4.dynamics.com">
+    
+    <!-- Security headers via meta tags -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="initialLoader" class="initial-loader">
+        <div class="loader-content">
+            <div class="loader-logo">📺</div>
+            <div class="loader-text">Azure Static Web App</div>
+            <div class="loader-spinner"></div>
+        </div>
+    </div>
+
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-container">
             <div class="login-logo">📺 NORSK TV</div>
-            <h3>Azure Web App Edition</h3>
+            <h3>Azure Static Web App Edition</h3>
             <p style="margin: 20px 0; color: #666;">
                 Logg inn med Microsoft-kontoen din for å få tilgang til sendestudiet
             </p>
             
-            <button class="login-btn" id="loginBtn">
+            <button class="login-btn" id="loginBtn" aria-label="Logg inn med Microsoft">
                 🔐 Logg inn med Microsoft
             </button>
             
@@ -29,22 +67,23 @@
                 <p style="margin-top: 10px;">Logger inn...</p>
             </div>
             
-            <div class="error-message" id="loginError"></div>
-            <div class="success-message" id="loginSuccess"></div>
+            <div class="error-message" id="loginError" role="alert"></div>
+            <div class="success-message" id="loginSuccess" role="status"></div>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 0.9rem; color: #666;">
-                <strong>Azure Web App Deployment</strong><br>
+                <strong>Azure Static Web App</strong><br>
                 Version: 1.0.0 | Environment: Production<br>
-                Client ID: e7174676-e8bb-446b-9260-af3f28086458
+                Deployment: Automatic via GitHub Actions<br>
+                <small>Client ID: e7174676-e8bb-446b-9260-af3f28086458</small>
             </div>
         </div>
     </div>
 
     <!-- Main Application -->
     <div class="main-container" id="mainContainer">
-        <div class="header-bar">
+        <header class="header-bar" role="banner">
             <div>
-                <strong>📺 Norsk TV - Azure Web App</strong>
+                <strong>📺 Norsk TV - Azure Static Web App</strong>
                 <span style="margin-left: 20px; opacity: 0.8;">
                     Powered by Microsoft Dataverse
                 </span>
@@ -52,125 +91,300 @@
             <div class="user-info">
                 <span style="font-size: 0.9rem; opacity: 0.8;">Bruker:</span>
                 <span id="userDisplayName">Laster...</span>
-                <button class="logout-btn" id="logoutBtn">Logg ut</button>
+                <button class="logout-btn" id="logoutBtn" aria-label="Logg ut">Logg ut</button>
             </div>
-        </div>
+        </header>
 
-        <div class="time-display" id="currentTime"></div>
+        <div class="time-display" id="currentTime" role="timer" aria-live="polite"></div>
         
-        <div class="live-countdown" id="liveCountdown">
+        <div class="live-countdown" id="liveCountdown" role="timer" aria-live="polite">
             <div><strong>🔴 NESTE SENDING</strong></div>
             <div class="countdown-number" id="liveCountdownNumber">--</div>
             <div id="liveCountdownText">sekunder</div>
         </div>
         
-        <div class="background-screen" id="backgroundScreen">
+        <main class="background-screen" id="backgroundScreen" role="main">
             <div class="logo-container">
-                <div class="logo">NORSK TV</div>
-                <div class="tagline">Azure Web App Broadcasting</div>
-                <div class="version-info">Powered by Microsoft Cloud</div>
+                <h1 class="logo">NORSK TV</h1>
+                <div class="tagline">Azure Static Web App Broadcasting</div>
+                <div class="version-info">Powered by Microsoft Cloud Platform</div>
             </div>
-        </div>
+        </main>
 
-        <div class="schedule-info" id="scheduleInfo">
+        <aside class="schedule-info" id="scheduleInfo" role="complementary" aria-label="Sendeskjema">
             <strong>📺 Sendeskjema fra Dataverse:</strong><br>
             <div id="scheduleList">
                 <div class="loading-spinner"></div>
-                <span>Laster sendeskjema...</span>
+                <span>Laster sendeskjema fra Microsoft Dataverse...</span>
             </div>
-        </div>
+        </aside>
 
-        <div class="video-container" id="videoContainer">
+        <section class="video-container" id="videoContainer" role="main" aria-label="Video avspilling">
             <div class="video-content">
                 <video 
                     id="realVideo" 
                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: none;" 
                     muted 
                     autoplay 
-                    playsinline>
+                    playsinline
+                    aria-label="Program video">
                 </video>
-                <div class="animated-program" id="animatedProgram" style="display: none;">
+                <div class="animated-program" id="animatedProgram" style="display: none;" role="img" aria-label="Program animasjon">
                     <!-- Fallback animasjon -->
                 </div>
                 <div class="video-overlay" id="videoOverlay">
                     <div id="currentProgramTitle">Program pågår...</div>
-                    <div class="program-source">📡 Azure Web App</div>
+                    <div class="program-source">📡 Azure Static Web App</div>
                 </div>
-                <div class="video-progress">
+                <div class="video-progress" role="progressbar" aria-label="Program fremdrift">
                     <div class="video-progress-bar" id="progressBar"></div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="news-banner">
+        <footer class="news-banner" role="contentinfo">
             <div class="news-ticker">
-                <div class="news-text" id="newsText">
-                    Kobler til Microsoft Dataverse...
+                <div class="news-text" id="newsText" aria-live="polite" aria-label="Nyhets-ticker">
+                    Kobler til Microsoft Dataverse via Azure Static Web App...
                 </div>
             </div>
-        </div>
+        </footer>
 
-        <div class="status-panel">
+        <div class="status-panel" role="status" aria-live="polite">
             <div class="dataverse-status" id="dataverseStatus">
                 🔗 Dataverse: Initialiserer...
             </div>
             <div class="deployment-info">
-                🌐 Azure Web App | 📍 West Europe
+                🌐 Azure Static Web App | 📍 Global CDN | 🔒 Auto HTTPS
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <!-- MSAL.js for Microsoft Authentication -->
-    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" 
+            integrity="sha384-..." 
+            crossorigin="anonymous"
+            defer></script>
     
     <!-- Main Application Script -->
-    <script src="js/app.js"></script>
+    <script src="/js/app.js" defer></script>
+    
+    <!-- Service Worker Registration (for PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('✅ Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ℹ️ Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
     
     <!-- Application Initialization -->
     <script>
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Starting Azure Web App Broadcast System...');
-            console.log('📍 Environment: Production');
-            console.log('🔗 Dataverse Integration: Enabled');
+        // Performance monitoring
+        const perfStart = performance.now();
+        
+        // Hide initial loader once everything is ready
+        function hideInitialLoader() {
+            const loader = document.getElementById('initialLoader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        // Initialize application - wait for all scripts to load
+        function initializeApp() {
+            console.log('🚀 Starting Azure Static Web App Broadcast System...');
+            console.log('📍 Environment: Production (Static Web App)');
+            console.log('🔗 CDN: Azure Global Network');
+            console.log('🔐 Authentication: Microsoft MSAL.js');
+            console.log('🗃️ Data Source: Microsoft Dataverse');
             console.log('🔑 Client ID: e7174676-e8bb-446b-9260-af3f28086458');
             
-            // Start the application
-            window.broadcastApp = new AzureBroadcastApp();
+            // Check if all required dependencies are loaded
+            if (typeof msal === 'undefined') {
+                console.error('❌ MSAL library not loaded');
+                document.getElementById('loginError').textContent = 'Authentication library ikke lastet. Prøv å oppdatere siden.';
+                hideInitialLoader();
+                return;
+            }
+
+            if (typeof AzureBroadcastApp === 'undefined') {
+                console.error('❌ AzureBroadcastApp class not found');
+                document.getElementById('loginError').textContent = 'Applikasjon ikke lastet. Prøv å oppdatere siden.';
+                hideInitialLoader();
+                return;
+            }
+            
+            try {
+                // Start the application
+                window.broadcastApp = new AzureBroadcastApp();
+                console.log('✅ Application initialized successfully');
+                hideInitialLoader();
+            } catch (error) {
+                console.error('❌ Failed to initialize application:', error);
+                document.getElementById('loginError').textContent = 'Kunne ikke starte applikasjon: ' + error.message;
+                hideInitialLoader();
+            }
+        }
+
+        // Wait for DOM and all scripts to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM loaded, waiting for scripts...');
+            
+            // Check if scripts are already loaded
+            if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
+                initializeApp();
+            } else {
+                // Wait a bit for scripts to load
+                let attempts = 0;
+                const maxAttempts = 10;
+                
+                const checkScripts = setInterval(() => {
+                    attempts++;
+                    console.log(`🔍 Checking scripts... attempt ${attempts}/${maxAttempts}`);
+                    
+                    if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
+                        clearInterval(checkScripts);
+                        initializeApp();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkScripts);
+                        console.error('❌ Scripts failed to load after multiple attempts');
+                        document.getElementById('loginError').textContent = 'Kunne ikke laste nødvendige komponenter. Sjekk internettforbindelsen og prøv igjen.';
+                        hideInitialLoader();
+                    }
+                }, 500);
+            }
         });
 
         // Handle page visibility changes
         document.addEventListener('visibilitychange', function() {
             if (window.broadcastApp && !document.hidden) {
-                // Refresh data when page becomes visible
+                console.log('👁️ Page focused - refreshing data');
                 window.broadcastApp.refreshData();
             }
         });
 
-        // Handle errors globally
+        // Global error handling
         window.addEventListener('error', function(e) {
-            console.error('🚨 Global error:', e.error);
-            if (window.broadcastApp) {
+            console.error('🚨 Global JavaScript error:', e.error);
+            if (window.broadcastApp && typeof window.broadcastApp.handleGlobalError === 'function') {
                 window.broadcastApp.handleGlobalError(e.error);
+            } else {
+                // Fallback error handling
+                const errorEl = document.getElementById('loginError');
+                if (errorEl) {
+                    errorEl.textContent = 'En feil oppstod: ' + (e.error?.message || 'Ukjent feil');
+                    errorEl.style.display = 'block';
+                }
             }
         });
 
         // Handle unhandled promise rejections
         window.addEventListener('unhandledrejection', function(e) {
             console.error('🚨 Unhandled promise rejection:', e.reason);
-            if (window.broadcastApp) {
+            if (window.broadcastApp && typeof window.broadcastApp.handleGlobalError === 'function') {
                 window.broadcastApp.handleGlobalError(e.reason);
             }
-            e.preventDefault(); // Prevent default browser error handling
+            e.preventDefault();
         });
 
-        // Add performance monitoring
+        // Performance logging
         window.addEventListener('load', function() {
+            const loadTime = performance.now() - perfStart;
+            console.log(`📊 App initialization time: ${Math.round(loadTime)}ms`);
+            
+            // Log performance metrics
             if (window.performance && window.performance.timing) {
-                const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
-                console.log(`📊 Page load time: ${loadTime}ms`);
+                const timing = window.performance.timing;
+                const totalLoadTime = timing.loadEventEnd - timing.navigationStart;
+                const domReadyTime = timing.domContentLoadedEventEnd - timing.navigationStart;
+                
+                console.log(`📊 Total page load: ${totalLoadTime}ms`);
+                console.log(`📊 DOM ready: ${domReadyTime}ms`);
             }
         });
+
+        // Network status monitoring
+        window.addEventListener('online', function() {
+            console.log('🌐 Network: Online');
+            if (window.broadcastApp && typeof window.broadcastApp.handleNetworkOnline === 'function') {
+                window.broadcastApp.handleNetworkOnline();
+            }
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('🌐 Network: Offline');
+            if (window.broadcastApp && typeof window.broadcastApp.handleNetworkOffline === 'function') {
+                window.broadcastApp.handleNetworkOffline();
+            }
+        });
+
+        // Add deployment info to console
+        console.log('%c🎯 Azure Static Web App Deployment Info', 'color: #0078d4; font-weight: bold; font-size: 14px;');
+        console.log('   Hosting: Azure Static Web Apps');
+        console.log('   CDN: Azure Global Network');
+        console.log('   SSL: Automatic (Let\'s Encrypt)');
+        console.log('   Deployment: GitHub Actions');
+        console.log('   Build Time:', new Date().toISOString());
     </script>
+
+    <!-- Add CSS for initial loader -->
+    <style>
+        .initial-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loader-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .loader-logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .loader-text {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .loader-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 </html>
