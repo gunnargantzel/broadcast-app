@@ -886,6 +886,39 @@ class AzureBroadcastApp {
             element.style.display = show ? 'flex' : 'none';
         }
     }
+
+    // Video control methods
+    toggleMute() {
+        const video = document.getElementById('realVideo');
+        const muteBtn = document.getElementById('muteBtn');
+        
+        if (!video || !muteBtn) return;
+        
+        video.muted = !video.muted;
+        muteBtn.textContent = video.muted ? '🔇' : '🔊';
+        
+        console.log(`🔊 Audio ${video.muted ? 'muted' : 'unmuted'}`);
+    }
+
+    toggleFullscreen() {
+        const videoContainer = document.getElementById('videoContainer');
+        
+        if (!videoContainer) return;
+        
+        if (!document.fullscreenElement) {
+            videoContainer.requestFullscreen().then(() => {
+                console.log('📺 Entered fullscreen mode');
+                document.getElementById('fullscreenBtn').textContent = '⛷';
+            }).catch(err => {
+                console.log('❌ Fullscreen failed:', err);
+            });
+        } else {
+            document.exitFullscreen().then(() => {
+                console.log('📺 Exited fullscreen mode');
+                document.getElementById('fullscreenBtn').textContent = '⛶';
+            });
+        }
+    }
 }
 
 // Make the class available globally
