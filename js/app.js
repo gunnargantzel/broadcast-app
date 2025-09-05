@@ -1,10 +1,10 @@
 /**
- * Azure Broadcast App - Main Application v2.1
- * Integrates with Microsoft Dataverse for broadcast scheduling
- * UPDATED: Fixed video looping issue - Version 2.1
+ * Azure Broadcast App - Main Application v2.2
+ * Integrates with Microsoft Dataverse for broadcast scheduling and news
+ * UPDATED: Fixed video looping + Enhanced Dataverse news integration - Version 2.2
  */
 
-console.log('🚀 Loading Azure Broadcast App v2.1 - PowerAI Edition (Video Fix)');
+console.log('🚀 Loading Azure Broadcast App v2.2 - PowerAI Edition (News + Video Fix)');
 
 // Configuration
 const msalConfig = {
@@ -33,7 +33,7 @@ let msalInstance;
 try {
     if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
         msalInstance = new msal.PublicClientApplication(msalConfig);
-        console.log('✅ MSAL instance created successfully (v2.1)');
+        console.log('✅ MSAL instance created successfully (v2.2)');
     } else {
         console.error('❌ MSAL library not properly loaded');
     }
@@ -43,7 +43,7 @@ try {
 
 class AzureBroadcastApp {
     constructor() {
-        console.log('🎬 Initializing AzureBroadcastApp v2.1 - PowerAI Edition (Video Fix)...');
+        console.log('🎬 Initializing AzureBroadcastApp v2.2 - PowerAI Edition (News + Video Fix)...');
         
         // Check MSAL availability
         if (!msalInstance) {
@@ -59,10 +59,11 @@ class AzureBroadcastApp {
         this.scheduleCheckInterval = null;
         this.nextBroadcastTime = null;
         this.lastScheduleUpdate = null;
+        this.lastNewsUpdate = null;
         this.retryCount = 0;
         this.maxRetries = 3;
-        this.currentVideoTimeout = null; // Track video timeout
-        this.programEndTimeout = null; // Track program end timeout
+        this.currentVideoTimeout = null;
+        this.programEndTimeout = null;
         
         // Program fallback content
         this.programContent = {
@@ -99,7 +100,7 @@ class AzureBroadcastApp {
         };
 
         this.newsItems = [
-            'Azure Broadcast System v2.1 initialiseres...'
+            'Azure Broadcast System v2.2 initialiseres...'
         ];
         this.currentNewsIndex = 0;
         
@@ -108,11 +109,12 @@ class AzureBroadcastApp {
 
     async init() {
         try {
-            console.log('🚀 Azure Broadcast App v2.1 starter...');
+            console.log('🚀 Azure Broadcast App v2.2 starter...');
             console.log('🌍 Environment: Production (Azure Static Web App)');
             console.log('🔗 Dataverse Endpoint:', dataverseConfig.webApiEndpoint);
             console.log('🏷️ Table Prefix:', dataverseConfig.tablePrefix);
-            console.log('🎥 Video Looping: FIXED (v2.1)');
+            console.log('🎥 Video Looping: FIXED (v2.2)');
+            console.log('📰 Enhanced News Integration: ENABLED (v2.2)');
             
             this.setupEventListeners();
             await this.handleAuthRedirect();
@@ -212,7 +214,7 @@ class AzureBroadcastApp {
 
     async initializeApp() {
         try {
-            console.log('🚀 Initializing application v2.1...');
+            console.log('🚀 Initializing application v2.2...');
             this.showLoading(true);
             
             // Get access token for Dataverse
@@ -236,9 +238,9 @@ class AzureBroadcastApp {
             this.startNewsRotation();
             
             // Show success message
-            this.showSuccess('✅ Koblet til Azure og Dataverse v2.1!');
+            this.showSuccess('✅ Koblet til Azure og Dataverse v2.2!');
             
-            console.log('✅ Application v2.1 initialized successfully');
+            console.log('✅ Application v2.2 initialized successfully');
             
         } catch (error) {
             console.error('❌ App initialization error:', error);
@@ -299,7 +301,7 @@ class AzureBroadcastApp {
             const tableName = `${dataverseConfig.tablePrefix}broadcastschedules`;
             const query = `${dataverseConfig.webApiEndpoint}/${tableName}?$filter=${dataverseConfig.tablePrefix}isactive eq true&$orderby=${dataverseConfig.tablePrefix}scheduledtime asc&$top=50`;
             
-            console.log('🔍 API Query v2.1:', query);
+            console.log('🔍 API Query v2.2:', query);
             console.log('🏷️ Using table:', tableName);
             
             const response = await fetch(query, { 
@@ -345,7 +347,7 @@ class AzureBroadcastApp {
     }
 
     createDemoSchedule() {
-        console.log('📋 Creating demo schedule v2.1...');
+        console.log('📋 Creating demo schedule v2.2...');
         const now = new Date();
         const demoSchedule = [];
         
@@ -365,7 +367,7 @@ class AzureBroadcastApp {
                 [`${dataverseConfig.tablePrefix}duration`]: 8 + (i % 5) * 2,
                 [`${dataverseConfig.tablePrefix}videourl`]: null,
                 [`${dataverseConfig.tablePrefix}isactive`]: true,
-                [`${dataverseConfig.tablePrefix}description`]: `Demo ${programNames[typeIndex]} - Azure v2.1`,
+                [`${dataverseConfig.tablePrefix}description`]: `Demo ${programNames[typeIndex]} - Azure v2.2`,
                 [`${dataverseConfig.tablePrefix}priority`]: i
             });
         }
@@ -707,7 +709,7 @@ class AzureBroadcastApp {
                 <div class="program-icon">${content.icon}</div>
                 <div class="program-title">${content.description}</div>
                 <div class="program-subtitle">${content.subtitle}</div>
-                <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.1</div>
+                <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.2</div>
             </div>
         `;
         
@@ -740,7 +742,7 @@ class AzureBroadcastApp {
 
     // FIXED: Complete cleanup in endProgram
     endProgram() {
-        console.log('📺 Ending current program v2.1');
+        console.log('📺 Ending current program v2.2');
         this.isPlayingVideo = false;
         
         // Clear all timeouts
@@ -800,6 +802,7 @@ class AzureBroadcastApp {
         console.log('✅ Program ended completely, ready for next broadcast');
     }
 
+    // ENHANCED NEWS INTEGRATION v2.2
     startNewsRotation() {
         const rotateNews = () => {
             this.currentNewsIndex = (this.currentNewsIndex + 1) % this.newsItems.length;
@@ -809,10 +812,21 @@ class AzureBroadcastApp {
             }
         };
         
+        // Roter nyheter hvert 8. sekund
         setInterval(rotateNews, 8000);
+        
+        // Last inn nyheter ved oppstart
         this.loadNewsFromDataverse();
         
-        console.log('📰 News rotation started');
+        // Oppdater nyheter fra Dataverse hvert 5. minutt
+        setInterval(() => {
+            if (!this.isPlayingVideo && this.accessToken) {
+                console.log('🔄 Auto-refreshing news...');
+                this.loadNewsFromDataverse();
+            }
+        }, 5 * 60 * 1000); // 5 minutter
+        
+        console.log('📰 News rotation started with 5-minute refresh');
     }
 
     async loadNewsFromDataverse() {
@@ -822,7 +836,7 @@ class AzureBroadcastApp {
                 return;
             }
             
-            console.log('📰 Loading news from Dataverse...');
+            console.log('📰 Loading news from Dataverse newsitems table...');
             
             const headers = {
                 'Authorization': `Bearer ${this.accessToken}`,
@@ -831,24 +845,67 @@ class AzureBroadcastApp {
                 'Accept': 'application/json'
             };
 
-            const query = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?$filter=${dataverseConfig.tablePrefix}isactive eq true&$orderby=createdon desc&$top=15`;
+            // Hent aktive nyheter sortert etter prioritet og publiseringsdato
+            const now = new Date().toISOString();
+            const query = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?` +
+                `$filter=${dataverseConfig.tablePrefix}isactive eq true and ` +
+                `(${dataverseConfig.tablePrefix}expirydate eq null or ${dataverseConfig.tablePrefix}expirydate gt ${now})&` +
+                `$orderby=${dataverseConfig.tablePrefix}priority desc,${dataverseConfig.tablePrefix}publishdate desc&` +
+                `$top=20&` +
+                `$select=${dataverseConfig.tablePrefix}headline,${dataverseConfig.tablePrefix}name,${dataverseConfig.tablePrefix}category,${dataverseConfig.tablePrefix}source,${dataverseConfig.tablePrefix}priority,${dataverseConfig.tablePrefix}publishdate`;
+            
+            console.log('🔍 News API Query:', query);
             
             const response = await fetch(query, { headers });
             
             if (response.ok) {
                 const data = await response.json();
                 if (data.value && data.value.length > 0) {
-                    this.newsItems = data.value.map(item => 
-                        item[`${dataverseConfig.tablePrefix}headline`] || 
-                        item[`${dataverseConfig.tablePrefix}name`] || 
-                        'Nyhetsoppdatering fra Dataverse'
-                    );
+                    this.newsItems = data.value.map(item => {
+                        // Format news item with category and source if available
+                        let newsText = item[`${dataverseConfig.tablePrefix}headline`] || 
+                                       item[`${dataverseConfig.tablePrefix}name`] || 
+                                       'Nyhetsoppdatering fra Dataverse';
+                        
+                        // Legg til kategori-emoji hvis tilgjengelig
+                        const category = item[`${dataverseConfig.tablePrefix}category`];
+                        const categoryEmojis = {
+                            'Breaking': '🚨',
+                            'Sports': '⚽',
+                            'Weather': '🌤️',
+                            'Culture': '🎭',
+                            'Politics': '🏛️',
+                            'Business': '💼',
+                            'Technology': '💻'
+                        };
+                        
+                        if (category && categoryEmojis[category]) {
+                            newsText = `${categoryEmojis[category]} ${newsText}`;
+                        }
+                        
+                        // Legg til kilde hvis tilgjengelig
+                        const source = item[`${dataverseConfig.tablePrefix}source`];
+                        if (source) {
+                            newsText += ` (${source})`;
+                        }
+                        
+                        return newsText;
+                    });
+                    
+                    this.lastNewsUpdate = new Date();
                     console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse`);
+                    this.updateDataverseStatus(`${this.newsItems.length} nyheter lastet`);
+                    
+                    // Logg nyhetsdetaljer for debugging
+                    console.log('📰 News items loaded:', this.newsItems.slice(0, 3));
+                    
                 } else {
+                    console.log('ℹ️ No active news found in Dataverse, using fallback');
                     this.setFallbackNews();
                 }
             } else {
-                console.log('ℹ️ News table not found, using fallback news');
+                const errorText = await response.text();
+                console.log('⚠️ News API error:', response.status, errorText);
                 this.setFallbackNews();
             }
         } catch (error) {
@@ -859,23 +916,23 @@ class AzureBroadcastApp {
 
     setFallbackNews() {
         this.newsItems = [
-            'Azure Static Web App Broadcast System v2.1 - Video Looping Fixed',
-            'Norsk TV sender nå direkte fra Microsoft Azure Cloud Platform med PowerAI prefix',
-            'Automatisk program-scheduling fra Dataverse database med real-time synkronisering',
-            'Skalerbar cloud-løsning for broadcast-industrien med enterprise sikkerhet',
-            'Microsoft Authentication og role-based access control for sikker tilgang',
-            'Real-time oppdateringer og automatisk failover til demo-data ved tilkoblingsproblemer',
-            'Azure Static Web App deployment med global tilgjengelighet og høy oppetid',
-            'Integrert med Power Platform for enkel administrasjon av sendeskjema'
+            '📺 Azure Static Web App Broadcast System v2.2 - Enhanced News Integration',
+            '🌐 Norsk TV sender nå direkte fra Microsoft Azure Cloud Platform med PowerAI prefix',
+            '🔄 Automatisk program-scheduling og nyhetsoppdateringer fra Dataverse database',
+            '🔒 Skalerbar cloud-løsning for broadcast-industrien med enterprise sikkerhet',
+            '🔐 Microsoft Authentication og role-based access control for sikker tilgang',
+            '📊 Real-time oppdateringer og automatisk failover til demo-data ved tilkoblingsproblemer',
+            '🚀 Azure Static Web App deployment med global tilgjengelighet og høy oppetid',
+            '⚡ Integrert med Power Platform for enkel administrasjon av sendeskjema og nyheter'
         ];
         
-        console.log('📰 Using fallback news items v2.1');
+        console.log('📰 Using fallback news items v2.2');
     }
 
     // Utility methods
     refreshData() {
         if (!this.isPlayingVideo && this.accessToken) {
-            console.log('🔄 Refreshing data v2.1...');
+            console.log('🔄 Refreshing data v2.2...');
             this.loadBroadcastSchedule();
             this.loadNewsFromDataverse();
         }
@@ -911,14 +968,14 @@ class AzureBroadcastApp {
     }
 
     initializeDemoMode() {
-        console.log('🎯 Initializing demo mode v2.1...');
+        console.log('🎯 Initializing demo mode v2.2...');
         
         this.showElement('loginScreen', false);
         this.showElement('mainContainer', true);
         
         const userDisplayElement = document.getElementById('userDisplayName');
         if (userDisplayElement) {
-            userDisplayElement.textContent = 'Demo Bruker v2.1';
+            userDisplayElement.textContent = 'Demo Bruker v2.2';
         }
         
         this.startClock();
@@ -927,7 +984,7 @@ class AzureBroadcastApp {
         this.startScheduleChecker();
         this.startNewsRotation();
         
-        this.updateDataverseStatus('Demo-modus aktiv v2.1');
+        this.updateDataverseStatus('Demo-modus aktiv v2.2');
         this.showError('Kjører i demo-modus - begrensede funksjoner');
     }
 
@@ -938,7 +995,7 @@ class AzureBroadcastApp {
         });
         const statusElement = document.getElementById('dataverseStatus');
         if (statusElement) {
-            statusElement.textContent = `🔗 Dataverse v2.1: ${status} (${timestamp})`;
+            statusElement.textContent = `🔗 Dataverse v2.2: ${status} (${timestamp})`;
         }
     }
 
@@ -1032,11 +1089,12 @@ window.BroadcastUtils = {
 
 // Safe initialization with cache busting
 (function() {
-    console.log('📦 Azure Broadcast App v2.1 JavaScript loaded successfully (Video Fix)');
+    console.log('📦 Azure Broadcast App v2.2 JavaScript loaded successfully (News + Video Fix)');
     console.log('🔧 Environment: Production (Cache Busted)');
     console.log('📅 Build date:', new Date().toISOString());
     console.log('🏷️ PowerAI Prefix Support: Enabled');
     console.log('🎥 Video Looping: FIXED');
+    console.log('📰 Enhanced News Integration: ENABLED');
     
     // Verify all required global objects are available
     if (typeof window === 'undefined') {
@@ -1045,9 +1103,9 @@ window.BroadcastUtils = {
     }
     
     // Add cache buster to ensure fresh loading
-    const cacheVersion = 'v2.1-videofix-' + new Date().getTime();
+    const cacheVersion = 'v2.2-news-videofix-' + new Date().getTime();
     window.broadcastAppVersion = cacheVersion;
     console.log('🔄 Cache Version:', cacheVersion);
     
-    console.log('✅ App.js v2.1 ready for initialization (Video Looping Fixed)');
+    console.log('✅ App.js v2.2 ready for initialization (News Integration + Video Looping Fixed)');
 })();
