@@ -183,6 +183,10 @@
                     muted 
                     autoplay 
                     playsinline
+                    loop="false"
+                    preload="metadata"
+                    disablepictureinpicture
+                    controlslist="nodownload nofullscreen noremoteplayback"
                     aria-label="Program video">
                 </video>
                 <div class="animated-program" id="animatedProgram" style="display: none;" role="img" aria-label="Program animasjon">
@@ -211,14 +215,14 @@
                 🔗 Dataverse: Initialiserer...
             </div>
             <div class="deployment-info">
-                🌐 Azure Static Web App | 📍 Global CDN | 🔒 Auto HTTPS
+                🌐 Azure Static Web App | 🚀 Global CDN | 🔒 Auto HTTPS
             </div>
         </div>
     </div>
 
     <!-- MSAL.js with working CDN URLs -->
     <script>
-        console.log('🔄 Loading MSAL.js library...');
+        console.log('📄 Loading MSAL.js library...');
         document.getElementById('loaderStatus').textContent = 'Laster autentisering...';
         
         (function() {
@@ -311,7 +315,7 @@
         // Initialize application
         function initializeApp() {
             console.log('🚀 Starting Azure Static Web App Broadcast System...');
-            console.log('📍 Environment: Production (Static Web App)');
+            console.log('🌍 Environment: Production (Static Web App)');
             console.log('🔗 CDN: Azure Global Network');
             console.log('🔐 Authentication: Microsoft MSAL.js');
             console.log('🗃️ Data Source: Microsoft Dataverse');
