@@ -216,16 +216,19 @@
         </div>
     </div>
 
-    <!-- MSAL.js with multiple fallback CDNs -->
+    <!-- MSAL.js with working CDN URLs -->
     <script>
         console.log('🔄 Loading MSAL.js library...');
         document.getElementById('loaderStatus').textContent = 'Laster autentisering...';
         
         (function() {
             const msalUrls = [
-                'https://alcdn.msauth.net/browser/2.45.0/js/msal-browser.min.js',
-                'https://unpkg.com/@azure/msal-browser@2.45.0/lib/msal-browser.min.js',
-                'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.45.0/lib/msal-browser.min.js'
+                // Microsoft CDN (latest available version)
+                'https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js',
+                'https://alcdn.msftauth.net/browser/2.35.0/js/msal-browser.min.js',
+                // Third-party CDNs with newer versions
+                'https://unpkg.com/@azure/msal-browser@3.24.0/lib/msal-browser.min.js',
+                'https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.24.0/lib/msal-browser.min.js'
             ];
             
             let currentUrl = 0;
@@ -255,7 +258,7 @@
                 script.onerror = function() {
                     console.warn('⚠️ Failed to load MSAL from:', msalUrls[currentUrl]);
                     currentUrl++;
-                    loadMsal();
+                    setTimeout(loadMsal, 1000); // Wait 1 second before trying next URL
                 };
                 
                 document.head.appendChild(script);
