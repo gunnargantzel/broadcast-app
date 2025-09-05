@@ -887,36 +887,26 @@ class AzureBroadcastApp {
         }
     }
 
-    // Video control methods
-    toggleMute() {
+    toggleAudio() {
         const video = document.getElementById('realVideo');
-        const muteBtn = document.getElementById('muteBtn');
+        const audioToggleBtn = document.getElementById('audioToggleBtn');
         
-        if (!video || !muteBtn) return;
+        if (!video || !audioToggleBtn) return;
         
-        video.muted = !video.muted;
-        muteBtn.textContent = video.muted ? '🔇' : '🔊';
-        
-        console.log(`🔊 Audio ${video.muted ? 'muted' : 'unmuted'}`);
-    }
-
-    toggleFullscreen() {
-        const videoContainer = document.getElementById('videoContainer');
-        
-        if (!videoContainer) return;
-        
-        if (!document.fullscreenElement) {
-            videoContainer.requestFullscreen().then(() => {
-                console.log('📺 Entered fullscreen mode');
-                document.getElementById('fullscreenBtn').textContent = '⛷';
-            }).catch(err => {
-                console.log('❌ Fullscreen failed:', err);
-            });
+        if (video.muted) {
+            // Unmute
+            video.muted = false;
+            audioToggleBtn.textContent = '🔊';
+            audioToggleBtn.classList.remove('muted');
+            audioToggleBtn.setAttribute('aria-label', 'Skru av lyd');
+            console.log('🔊 Audio enabled');
         } else {
-            document.exitFullscreen().then(() => {
-                console.log('📺 Exited fullscreen mode');
-                document.getElementById('fullscreenBtn').textContent = '⛶';
-            });
+            // Mute
+            video.muted = true;
+            audioToggleBtn.textContent = '🔇';
+            audioToggleBtn.classList.add('muted');
+            audioToggleBtn.setAttribute('aria-label', 'Skru på lyd');
+            console.log('🔇 Audio muted');
         }
     }
 }
