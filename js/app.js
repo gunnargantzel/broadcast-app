@@ -1,11 +1,10 @@
 /**
- * Azure Broadcast App - Main Application v2.4
- * FIXED: Missing news table handling + Long URL truncation issue
+ * Azure Broadcast App - Main Application v2.5
+ * FINAL: Aggressive anti-loop + Audio enabled for videos
  */
 
-console.log('🚀 Loading Azure Broadcast App v2.4 - PowerAI Edition (Fixed)');
+console.log('🚀 Loading Azure Broadcast App v2.5 - NO LOOP + AUDIO');
 
-// Configuration
 const msalConfig = {
     auth: {
         clientId: 'e7174676-e8bb-446b-9260-af3f28086458',
@@ -25,13 +24,12 @@ const dataverseConfig = {
     tablePrefix: 'powerai_'
 };
 
-// Initialize MSAL
 let msalInstance;
 
 try {
     if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
         msalInstance = new msal.PublicClientApplication(msalConfig);
-        console.log('✅ MSAL instance created successfully (v2.4)');
+        console.log('✅ MSAL instance created successfully (v2.5)');
     } else {
         console.error('❌ MSAL library not properly loaded');
     }
@@ -41,7 +39,7 @@ try {
 
 class AzureBroadcastApp {
     constructor() {
-        console.log('🎬 Initializing AzureBroadcastApp v2.4...');
+        console.log('🎬 Initializing AzureBroadcastApp v2.5 - NO LOOP + AUDIO...');
         
         if (!msalInstance) {
             throw new Error('MSAL instance not available. Cannot initialize app.');
@@ -61,9 +59,9 @@ class AzureBroadcastApp {
         this.maxRetries = 3;
         this.currentVideoTimeout = null;
         this.programEndTimeout = null;
-        this.newsTableExists = false; // Track if news table exists
+        this.newsTableExists = false;
+        this.programEndedManually = false; // NEW: Track manual program end
         
-        // Program fallback content
         this.programContent = {
             weather: { 
                 icon: '🌤️', 
@@ -97,9 +95,7 @@ class AzureBroadcastApp {
             }
         };
 
-        this.newsItems = [
-            'Azure Broadcast System v2.4 initialiseres...'
-        ];
+        this.newsItems = ['Azure Broadcast System v2.5 initialiseres...'];
         this.currentNewsIndex = 0;
         
         this.init();
@@ -107,13 +103,9 @@ class AzureBroadcastApp {
 
     async init() {
         try {
-            console.log('🚀 Azure Broadcast App v2.4 starter...');
-            console.log('🌍 Environment: Production (Azure Static Web App)');
-            console.log('🔗 Dataverse Endpoint:', dataverseConfig.webApiEndpoint);
-            console.log('🏷️ Table Prefix:', dataverseConfig.tablePrefix);
-            console.log('🎥 Video Looping: FIXED');
-            console.log('📰 News Integration: AUTO-DETECT');
-            console.log('🔗 Long URL Support: FIXED');
+            console.log('🚀 Azure Broadcast App v2.5 starter...');
+            console.log('🎥 Anti-Loop: AGGRESSIVE MODE');
+            console.log('🔊 Audio: ENABLED');
             
             this.setupEventListeners();
             await this.handleAuthRedirect();
@@ -207,7 +199,7 @@ class AzureBroadcastApp {
 
     async initializeApp() {
         try {
-            console.log('🚀 Initializing application v2.4...');
+            console.log('🚀 Initializing application v2.5...');
             this.showLoading(true);
             
             await this.getAccessToken();
@@ -226,8 +218,8 @@ class AzureBroadcastApp {
             this.startScheduleChecker();
             this.startNewsRotation();
             
-            this.showSuccess('✅ Koblet til Azure og Dataverse v2.4!');
-            console.log('✅ Application v2.4 initialized successfully');
+            this.showSuccess('✅ Koblet til Azure og Dataverse v2.5!');
+            console.log('✅ Application v2.5 initialized successfully');
             
         } catch (error) {
             console.error('❌ App initialization error:', error);
@@ -285,8 +277,6 @@ class AzureBroadcastApp {
             const tableName = `${dataverseConfig.tablePrefix}broadcastschedules`;
             const query = `${dataverseConfig.webApiEndpoint}/${tableName}?$filter=${dataverseConfig.tablePrefix}isactive eq true&$orderby=${dataverseConfig.tablePrefix}scheduledtime asc&$top=50`;
             
-            console.log('🔍 API Query v2.4:', query);
-            
             const response = await fetch(query, { 
                 headers,
                 method: 'GET'
@@ -304,17 +294,6 @@ class AzureBroadcastApp {
             this.retryCount = 0;
             
             console.log(`✅ Loaded ${this.broadcastSchedule.length} programs from Dataverse`);
-            
-            // DEBUG: Log first program's video URL to check truncation
-            if (this.broadcastSchedule.length > 0) {
-                const firstProgram = this.broadcastSchedule[0];
-                const videoUrl = firstProgram[`${dataverseConfig.tablePrefix}videourl`];
-                if (videoUrl) {
-                    console.log('🔍 First program video URL length:', videoUrl.length);
-                    console.log('🔍 First program video URL:', videoUrl);
-                }
-            }
-            
             this.updateScheduleDisplay();
             this.updateDataverseStatus(`${this.broadcastSchedule.length} programmer lastet`);
             
@@ -341,7 +320,7 @@ class AzureBroadcastApp {
     }
 
     createDemoSchedule() {
-        console.log('📋 Creating demo schedule v2.4...');
+        console.log('📋 Creating demo schedule v2.5...');
         const now = new Date();
         const demoSchedule = [];
         
@@ -352,12 +331,9 @@ class AzureBroadcastApp {
             
             const typeIndex = i % programTypes.length;
             
-            // Add some demo programs with long blob URLs to test
             let demoVideoUrl = null;
             if (i === 0) {
                 demoVideoUrl = 'https://poweraitestaistorage.blob.core.windows.net/videos/How Investing in AI Video Drives Business Outcomes.mp4';
-            } else if (i === 1) {
-                demoVideoUrl = 'https://poweraitestaistorage.blob.core.windows.net/videos/sample-long-filename-with-many-characters-to-test-url-length.mp4';
             }
             
             demoSchedule.push({
@@ -365,15 +341,15 @@ class AzureBroadcastApp {
                 [`${dataverseConfig.tablePrefix}name`]: `${programNames[typeIndex]} #${Math.floor(i/5) + 1}`,
                 [`${dataverseConfig.tablePrefix}programtype`]: programTypes[typeIndex],
                 [`${dataverseConfig.tablePrefix}scheduledtime`]: scheduledTime.toISOString(),
-                [`${dataverseConfig.tablePrefix}duration`]: 8 + (i % 5) * 2,
+                [`${dataverseConfig.tablePrefix}duration`]: 15 + (i % 3) * 5, // Longer durations for testing
                 [`${dataverseConfig.tablePrefix}videourl`]: demoVideoUrl,
                 [`${dataverseConfig.tablePrefix}isactive`]: true,
-                [`${dataverseConfig.tablePrefix}description`]: `Demo ${programNames[typeIndex]} - Azure v2.4`,
+                [`${dataverseConfig.tablePrefix}description`]: `Demo ${programNames[typeIndex]} - v2.5`,
                 [`${dataverseConfig.tablePrefix}priority`]: i
             });
         }
         
-        console.log(`✅ Created ${demoSchedule.length} demo programs with test URLs`);
+        console.log(`✅ Created ${demoSchedule.length} demo programs`);
         return demoSchedule;
     }
 
@@ -393,9 +369,6 @@ class AzureBroadcastApp {
                 <div style="color: #ffeb3b; text-align: center; padding: 20px;">
                     <div style="font-size: 2rem; margin-bottom: 10px;">⏰</div>
                     <div>Ingen kommende programmer</div>
-                    <div style="font-size: 0.9rem; opacity: 0.7; margin-top: 10px;">
-                        Sjekk Dataverse-konfigurasjonen
-                    </div>
                 </div>`;
             return;
         }
@@ -425,13 +398,8 @@ class AzureBroadcastApp {
             }
             
             const programIcon = this.programContent[program[`${prefix}programtype`]]?.icon || '📺';
-            
             const hasVideo = program[`${prefix}videourl`] && program[`${prefix}videourl`].trim();
-            const videoIndicator = hasVideo ? '🎥' : '🎨';
-            const videoTitle = hasVideo ? 'Video fra blob storage' : 'Animert program';
-            
-            // DEBUG: Show URL length in display
-            const urlLength = hasVideo ? program[`${prefix}videourl`].length : 0;
+            const videoIndicator = hasVideo ? '🎥🔊' : '🎨'; // Added sound icon for videos
             
             html += `
                 <div style="
@@ -452,22 +420,12 @@ class AzureBroadcastApp {
                     </div>
                     <div style="color: white; font-weight: 500; margin-bottom: 3px; display: flex; align-items: center; gap: 8px;">
                         ${program[`${prefix}name`]}
-                        <span style="font-size: 0.8rem; opacity: 0.7;" title="${videoTitle}">${videoIndicator}</span>
+                        <span style="font-size: 0.8rem; opacity: 0.7;">${videoIndicator}</span>
                     </div>
                     <div style="font-size: 0.85rem; opacity: 0.8; display: flex; justify-content: space-between;">
                         <span>${program[`${prefix}duration`]}s</span>
                         <span>${timeUntil > 0 ? `om ${timeUntil}s` : 'nå'}</span>
                     </div>
-                    ${program[`${prefix}description`] ? `
-                        <div style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px; font-style: italic;">
-                            ${program[`${prefix}description`]}
-                        </div>
-                    ` : ''}
-                    ${hasVideo ? `
-                        <div style="font-size: 0.75rem; opacity: 0.5; margin-top: 3px; color: #4fc3f7;">
-                            📡 Video URL (${urlLength} tegn)
-                        </div>
-                    ` : ''}
                 </div>
             `;
         });
@@ -477,8 +435,6 @@ class AzureBroadcastApp {
         if (upcomingPrograms.length > 0) {
             this.nextBroadcastTime = new Date(upcomingPrograms[0][`${prefix}scheduledtime`]);
             this.currentProgramIndex = this.broadcastSchedule.indexOf(upcomingPrograms[0]);
-            
-            console.log(`📺 Next program: ${upcomingPrograms[0][`${prefix}name`]} at ${this.nextBroadcastTime.toLocaleTimeString()}`);
         }
     }
 
@@ -599,10 +555,15 @@ class AzureBroadcastApp {
     async startProgram(program) {
         const prefix = dataverseConfig.tablePrefix;
         console.log(`🎬 Starting program: ${program[`${prefix}name`]}`);
-        this.isPlayingVideo = true;
         
+        // CRITICAL: Set flags immediately
+        this.isPlayingVideo = true;
+        this.programEndedManually = false; // Reset manual end flag
+        
+        // Clear any existing timeouts
         if (this.programEndTimeout) {
             clearTimeout(this.programEndTimeout);
+            this.programEndTimeout = null;
         }
         
         this.showElement('backgroundScreen', false);
@@ -616,89 +577,97 @@ class AzureBroadcastApp {
         
         const videoUrl = program[`${prefix}videourl`];
         if (videoUrl && videoUrl.trim() && this.isValidVideoUrl(videoUrl.trim())) {
-            console.log(`🎥 Loading video: ${videoUrl}`);
-            console.log(`🔍 Video URL length: ${videoUrl.length} characters`);
+            console.log(`🎥 Loading video with audio: ${videoUrl}`);
             this.tryLoadRealVideo(videoUrl.trim(), program[`${prefix}programtype`]);
         } else {
-            if (videoUrl) {
-                console.log(`⚠️ Invalid video URL: ${videoUrl}`);
-            }
             console.log(`🎨 Using animated fallback for: ${program[`${prefix}programtype`]}`);
             this.showAnimatedProgram(program[`${prefix}programtype`]);
         }
         
         this.startProgressBar(program[`${prefix}duration`]);
 
+        // Set program end timeout - THIS IS THE MASTER TIMER
         this.programEndTimeout = setTimeout(() => {
+            console.log('⏰ Program duration reached - ending program');
             this.endProgram();
         }, program[`${prefix}duration`] * 1000);
         
         this.updateDataverseStatus(`Sender: ${program[`${prefix}name`]}`);
     }
 
+    // AGGRESSIVE ANTI-LOOP VIDEO LOADING
     tryLoadRealVideo(videoUrl, programType) {
         const video = document.getElementById('realVideo');
         const animatedProgram = document.getElementById('animatedProgram');
         
         if (!video || !animatedProgram) return;
         
+        // Clear any existing timeout
         if (this.currentVideoTimeout) {
             clearTimeout(this.currentVideoTimeout);
             this.currentVideoTimeout = null;
         }
         
+        // AGGRESSIVE RESET
         video.style.display = 'none';
         animatedProgram.style.display = 'none';
         
+        // Remove ALL possible event listeners
+        const eventTypes = ['loadeddata', 'error', 'ended', 'canplay', 'loadstart', 'progress', 
+                           'loadedmetadata', 'canplaythrough', 'play', 'pause', 'timeupdate', 
+                           'seeking', 'seeked', 'waiting', 'playing'];
+        
+        eventTypes.forEach(eventType => {
+            video.removeEventListener(eventType, this.handleVideoEvent);
+        });
+        
+        // Clear all on* properties
         video.onloadeddata = null;
         video.onerror = null;
         video.onended = null;
         video.oncanplay = null;
         video.onloadstart = null;
         video.onprogress = null;
+        video.onloadedmetadata = null;
+        video.oncanplaythrough = null;
+        video.onplay = null;
+        video.onpause = null;
+        video.ontimeupdate = null;
+        video.onseeking = null;
+        video.onseeked = null;
+        video.onwaiting = null;
+        video.onplaying = null;
         
+        // COMPLETE RESET
         video.pause();
         video.currentTime = 0;
         video.src = '';
+        video.load(); // Force reset
         
+        // ANTI-LOOP PROPERTIES - SET MULTIPLE TIMES
         video.loop = false;
         video.controls = false;
         video.autoplay = true;
-        video.muted = true;
+        video.muted = false; // ENABLE AUDIO
+        video.volume = 1.0; // Full volume
         video.playsInline = true;
         video.preload = 'metadata';
         video.disablePictureInPicture = true;
         
+        // Force anti-loop properties again
+        setTimeout(() => {
+            video.loop = false;
+        }, 100);
+        
         this.currentVideoTimeout = setTimeout(() => {
-            console.log('⏰ Video loading timeout, using animation fallback');
+            console.log('⏰ Video loading timeout');
             this.showAnimatedProgram(programType);
             this.currentVideoTimeout = null;
-        }, 15000); // Increased to 15 seconds for long URLs
+        }, 15000);
         
-        video.onloadstart = () => {
-            console.log('📡 Started loading video...');
-        };
-        
-        video.onprogress = () => {
-            if (video.buffered.length > 0) {
-                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                const duration = video.duration;
-                if (duration > 0) {
-                    const bufferedPercent = (bufferedEnd / duration) * 100;
-                    console.log(`📊 Video buffered: ${Math.round(bufferedPercent)}%`);
-                }
-            }
-        };
-        
-        video.onended = () => {
-            console.log('📺 Video ended naturally - preventing restart');
-            video.pause();
-            video.currentTime = 0;
-            video.src = '';
-        };
-        
-        video.onloadeddata = () => {
-            console.log('✅ Video loaded successfully');
+        // SINGLE EVENT HANDLER APPROACH
+        const handleVideoLoaded = () => {
+            console.log('✅ Video loaded with audio enabled');
             if (this.currentVideoTimeout) {
                 clearTimeout(this.currentVideoTimeout);
                 this.currentVideoTimeout = null;
@@ -707,37 +676,58 @@ class AzureBroadcastApp {
             video.style.display = 'block';
             animatedProgram.style.display = 'none';
             
+            // FORCE ANTI-LOOP AGAIN
             video.loop = false;
             video.currentTime = 0;
             
-            video.play().catch(e => {
+            // Try to play with audio
+            video.play().then(() => {
+                console.log('▶️ Video playing with audio');
+                // Force anti-loop one more time after play starts
+                setTimeout(() => {
+                    video.loop = false;
+                }, 500);
+            }).catch(e => {
                 console.log(`❌ Video autoplay failed: ${e.message}`);
-                this.showAnimatedProgram(programType);
+                console.log('🔇 Trying with muted...');
+                video.muted = true;
+                video.play().catch(e2 => {
+                    console.log(`❌ Muted autoplay also failed: ${e2.message}`);
+                    this.showAnimatedProgram(programType);
+                });
             });
         };
         
-        video.onerror = (e) => {
+        const handleVideoEnded = () => {
+            console.log('📺 Video ended - PREVENTING ANY RESTART');
+            
+            // AGGRESSIVE STOP
+            video.pause();
+            video.currentTime = 0;
+            video.src = '';
+            video.loop = false;
+            
+            // DO NOT restart video - let program timer handle end
+            if (!this.programEndedManually) {
+                console.log('📺 Video ended naturally, waiting for program timer...');
+            }
+        };
+        
+        const handleVideoError = (e) => {
             const error = video.error;
             let errorMessage = 'Unknown error';
             
             if (error) {
-                switch(error.code) {
-                    case MediaError.MEDIA_ERR_ABORTED:
-                        errorMessage = 'Video loading aborted';
-                        break;
-                    case MediaError.MEDIA_ERR_NETWORK:
-                        errorMessage = 'Network error loading video';
-                        break;
-                    case MediaError.MEDIA_ERR_DECODE:
-                        errorMessage = 'Video decode error';
-                        break;
-                    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                        errorMessage = 'Video format not supported';
-                        break;
-                }
+                const errorCodes = {
+                    1: 'MEDIA_ERR_ABORTED',
+                    2: 'MEDIA_ERR_NETWORK', 
+                    3: 'MEDIA_ERR_DECODE',
+                    4: 'MEDIA_ERR_SRC_NOT_SUPPORTED'
+                };
+                errorMessage = errorCodes[error.code] || 'Unknown error code';
             }
             
-            console.log(`❌ Video loading failed: ${errorMessage}`, e);
+            console.log(`❌ Video error: ${errorMessage}`);
             if (this.currentVideoTimeout) {
                 clearTimeout(this.currentVideoTimeout);
                 this.currentVideoTimeout = null;
@@ -745,9 +735,19 @@ class AzureBroadcastApp {
             this.showAnimatedProgram(programType);
         };
         
-        console.log(`🔗 Setting video source: ${videoUrl}`);
+        // Set event handlers ONCE
+        video.addEventListener('loadeddata', handleVideoLoaded, { once: true });
+        video.addEventListener('ended', handleVideoEnded);
+        video.addEventListener('error', handleVideoError, { once: true });
+        
+        console.log(`🔗 Loading video: ${videoUrl.substring(0, 80)}...`);
         video.src = videoUrl;
         video.load();
+        
+        // FINAL SAFETY CHECK
+        setTimeout(() => {
+            video.loop = false;
+        }, 1000);
     }
 
     showAnimatedProgram(programType) {
@@ -758,10 +758,14 @@ class AzureBroadcastApp {
         
         const content = this.programContent[programType] || this.programContent.news;
         
+        // AGGRESSIVE VIDEO STOP
         video.style.display = 'none';
         video.pause();
+        video.currentTime = 0;
         video.src = '';
+        video.loop = false;
         
+        // Show animation
         animatedProgram.style.display = 'flex';
         animatedProgram.style.background = content.color;
         
@@ -770,7 +774,7 @@ class AzureBroadcastApp {
                 <div class="program-icon">${content.icon}</div>
                 <div class="program-title">${content.description}</div>
                 <div class="program-subtitle">${content.subtitle}</div>
-                <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.4</div>
+                <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.5</div>
             </div>
         `;
         
@@ -801,10 +805,15 @@ class AzureBroadcastApp {
         console.log(`📊 Progress bar started for ${duration}s`);
     }
 
+    // COMPLETE PROGRAM END WITH AGGRESSIVE CLEANUP
     endProgram() {
-        console.log('📺 Ending current program v2.4');
-        this.isPlayingVideo = false;
+        console.log('📺 ENDING PROGRAM v2.5 - AGGRESSIVE CLEANUP');
         
+        // Set flags immediately
+        this.isPlayingVideo = false;
+        this.programEndedManually = true;
+        
+        // Clear ALL timeouts
         if (this.currentVideoTimeout) {
             clearTimeout(this.currentVideoTimeout);
             this.currentVideoTimeout = null;
@@ -817,22 +826,47 @@ class AzureBroadcastApp {
         
         const video = document.getElementById('realVideo');
         if (video) {
+            // NUCLEAR OPTION - COMPLETE VIDEO DESTRUCTION
             video.pause();
             video.currentTime = 0;
             video.src = '';
             video.style.display = 'none';
             
-            video.onended = null;
+            // Remove ALL event listeners
+            const eventTypes = ['loadeddata', 'error', 'ended', 'canplay', 'loadstart', 'progress', 
+                               'loadedmetadata', 'canplaythrough', 'play', 'pause', 'timeupdate', 
+                               'seeking', 'seeked', 'waiting', 'playing'];
+            
+            eventTypes.forEach(eventType => {
+                video.removeEventListener(eventType, this.handleVideoEvent);
+            });
+            
+            // Clear ALL on* properties
             video.onloadeddata = null;
             video.onerror = null;
+            video.onended = null;
             video.oncanplay = null;
-            video.onplay = null;
-            video.onpause = null;
             video.onloadstart = null;
             video.onprogress = null;
+            video.onloadedmetadata = null;
+            video.oncanplaythrough = null;
+            video.onplay = null;
+            video.onpause = null;
+            video.ontimeupdate = null;
+            video.onseeking = null;
+            video.onseeked = null;
+            video.onwaiting = null;
+            video.onplaying = null;
             
+            // FORCE ALL ANTI-LOOP PROPERTIES
             video.loop = false;
             video.autoplay = false;
+            video.controls = false;
+            
+            // Force load reset
+            video.load();
+            
+            console.log('💥 Video completely destroyed and reset');
         }
         
         const animatedProgram = document.getElementById('animatedProgram');
@@ -857,10 +891,10 @@ class AzureBroadcastApp {
         this.updateScheduleDisplay();
         this.updateDataverseStatus('Klar for neste sending');
         
-        console.log('✅ Program ended completely, ready for next broadcast');
+        console.log('✅ Program ended completely - ready for next broadcast');
     }
 
-    // FIXED: Smart news loading that handles missing table
+    // NEWS HANDLING
     startNewsRotation() {
         const rotateNews = () => {
             this.currentNewsIndex = (this.currentNewsIndex + 1) % this.newsItems.length;
@@ -871,11 +905,8 @@ class AzureBroadcastApp {
         };
         
         setInterval(rotateNews, 8000);
-        
-        // Try to load news at startup
         this.loadNewsFromDataverse();
         
-        // Update news from Dataverse every 5 minutes (only if table exists)
         setInterval(() => {
             if (!this.isPlayingVideo && this.accessToken && this.newsTableExists) {
                 console.log('🔄 Auto-refreshing news...');
@@ -893,8 +924,6 @@ class AzureBroadcastApp {
                 return;
             }
             
-            console.log('📰 Checking for newsitems table...');
-            
             const headers = {
                 'Authorization': `Bearer ${this.accessToken}`,
                 'OData-MaxVersion': '4.0',
@@ -902,11 +931,7 @@ class AzureBroadcastApp {
                 'Accept': 'application/json'
             };
 
-            // First, check if the table exists by trying a simple query
             const testQuery = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?$top=1`;
-            
-            console.log('🔍 Testing news table existence:', testQuery);
-            
             const testResponse = await fetch(testQuery, { headers });
             
             if (!testResponse.ok) {
@@ -921,9 +946,7 @@ class AzureBroadcastApp {
                 }
             }
             
-            // Table exists, now get the actual news
             this.newsTableExists = true;
-            console.log('✅ News table exists, loading news...');
             
             const now = new Date().toISOString();
             const query = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?` +
@@ -931,7 +954,7 @@ class AzureBroadcastApp {
                 `(${dataverseConfig.tablePrefix}expirydate eq null or ${dataverseConfig.tablePrefix}expirydate gt ${now})&` +
                 `$orderby=${dataverseConfig.tablePrefix}priority desc,${dataverseConfig.tablePrefix}publishdate desc&` +
                 `$top=20&` +
-                `$select=${dataverseConfig.tablePrefix}headline,${dataverseConfig.tablePrefix}name,${dataverseConfig.tablePrefix}category,${dataverseConfig.tablePrefix}source,${dataverseConfig.tablePrefix}priority,${dataverseConfig.tablePrefix}publishdate`;
+                `$select=${dataverseConfig.tablePrefix}headline,${dataverseConfig.tablePrefix}name,${dataverseConfig.tablePrefix}category,${dataverseConfig.tablePrefix}source`;
             
             const response = await fetch(query, { headers });
             
@@ -966,20 +989,14 @@ class AzureBroadcastApp {
                         return newsText;
                     });
                     
-                    this.lastNewsUpdate = new Date();
                     console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse`);
-                    this.updateDataverseStatus(`${this.newsItems.length} nyheter lastet`);
-                    
                 } else {
-                    console.log('ℹ️ No active news found, using fallback');
                     this.setFallbackNews();
                 }
             } else {
-                console.log('⚠️ News query failed, using fallback');
                 this.setFallbackNews();
             }
         } catch (error) {
-            console.log('ℹ️ Could not load news from Dataverse:', error.message);
             this.newsTableExists = false;
             this.setFallbackNews();
         }
@@ -987,25 +1004,25 @@ class AzureBroadcastApp {
 
     setFallbackNews() {
         this.newsItems = [
-            '📺 Azure Static Web App Broadcast System v2.4 - Fixed URL og News Issues',
+            '📺 Azure Static Web App Broadcast System v2.5 - Anti-Loop + Audio Enabled',
+            '🔊 Videoer spilles nå av med lyd når tilgjengelig',
+            '🚫 Aggressiv anti-loop teknologi implementert',
             '🌐 Norsk TV sender direkte fra Microsoft Azure Cloud Platform',
             '🔄 Automatisk program-scheduling fra Dataverse database',
             '🔒 Enterprise sikkerhet med Microsoft Authentication',
             '📊 Real-time oppdateringer og automatisk failover',
             '🚀 Global deployment via Azure Static Web Apps',
             '⚡ Power Platform integrasjon for enkel administrasjon',
-            '🎥 Støtte for lange blob storage URLs opptil 500 tegn',
-            '📰 Smart nyhetshåndtering med automatisk fallback',
-            '🔍 Debug-informasjon for URL-lengde og table-eksistens'
+            '🎥 Støtte for lange blob storage URLs med SAS tokens'
         ];
         
-        console.log('📰 Using fallback news items v2.4');
+        console.log('📰 Using fallback news items v2.5');
     }
 
     // Utility methods
     refreshData() {
         if (!this.isPlayingVideo && this.accessToken) {
-            console.log('🔄 Refreshing data v2.4...');
+            console.log('🔄 Refreshing data v2.5...');
             this.loadBroadcastSchedule();
             if (this.newsTableExists) {
                 this.loadNewsFromDataverse();
@@ -1043,14 +1060,14 @@ class AzureBroadcastApp {
     }
 
     initializeDemoMode() {
-        console.log('🎯 Initializing demo mode v2.4...');
+        console.log('🎯 Initializing demo mode v2.5...');
         
         this.showElement('loginScreen', false);
         this.showElement('mainContainer', true);
         
         const userDisplayElement = document.getElementById('userDisplayName');
         if (userDisplayElement) {
-            userDisplayElement.textContent = 'Demo Bruker v2.4';
+            userDisplayElement.textContent = 'Demo Bruker v2.5';
         }
         
         this.startClock();
@@ -1059,7 +1076,7 @@ class AzureBroadcastApp {
         this.startScheduleChecker();
         this.startNewsRotation();
         
-        this.updateDataverseStatus('Demo-modus aktiv v2.4');
+        this.updateDataverseStatus('Demo-modus aktiv v2.5');
         this.showError('Kjører i demo-modus - begrensede funksjoner');
     }
 
@@ -1070,7 +1087,7 @@ class AzureBroadcastApp {
         });
         const statusElement = document.getElementById('dataverseStatus');
         if (statusElement) {
-            statusElement.textContent = `🔗 Dataverse v2.4: ${status} (${timestamp})`;
+            statusElement.textContent = `🔗 Dataverse v2.5: ${status} (${timestamp})`;
         }
     }
 
@@ -1119,6 +1136,7 @@ class AzureBroadcastApp {
         
         if (video.muted) {
             video.muted = false;
+            video.volume = 1.0;
             audioToggleBtn.textContent = '🔊';
             audioToggleBtn.classList.remove('muted');
             audioToggleBtn.setAttribute('aria-label', 'Skru av lyd');
@@ -1160,25 +1178,59 @@ window.BroadcastUtils = {
     }
 };
 
+// Test function for manual video testing
+window.testVideo = function() {
+    const video = document.getElementById('realVideo');
+    if (video && video.src) {
+        console.log('Current video state:', {
+            src: video.src,
+            loop: video.loop,
+            muted: video.muted,
+            volume: video.volume,
+            currentTime: video.currentTime,
+            duration: video.duration,
+            paused: video.paused,
+            ended: video.ended
+        });
+    } else {
+        console.log('No video currently loaded');
+    }
+};
+
+// Emergency stop function
+window.emergencyStopVideo = function() {
+    const video = document.getElementById('realVideo');
+    if (video) {
+        video.pause();
+        video.currentTime = 0;
+        video.src = '';
+        video.loop = false;
+        video.autoplay = false;
+        video.load();
+        console.log('Emergency video stop executed');
+    }
+    
+    if (window.broadcastApp) {
+        window.broadcastApp.endProgram();
+    }
+};
+
 // Safe initialization
 (function() {
-    console.log('📦 Azure Broadcast App v2.4 JavaScript loaded successfully');
+    console.log('📦 Azure Broadcast App v2.5 JavaScript loaded successfully');
     console.log('🔧 Environment: Production');
-    console.log('📅 Build date:', new Date().toISOString());
-    console.log('🏷️ PowerAI Prefix Support: Enabled');
-    console.log('🎥 Video Looping: FIXED');
-    console.log('📰 Smart News Integration: ENABLED (Auto-detect table)');
-    console.log('🔗 Long URL Support: FIXED (500+ characters)');
-    console.log('🔍 Debug Logging: ENABLED');
+    console.log('🎥 Anti-Loop: AGGRESSIVE MODE ENABLED');
+    console.log('🔊 Audio: ENABLED BY DEFAULT');
+    console.log('🛑 Emergency functions: testVideo(), emergencyStopVideo()');
     
     if (typeof window === 'undefined') {
         console.error('❌ Window object not available');
         return;
     }
     
-    const cacheVersion = 'v2.4-fixed-' + new Date().getTime();
+    const cacheVersion = 'v2.5-no-loop-audio-' + new Date().getTime();
     window.broadcastAppVersion = cacheVersion;
     console.log('🔄 Cache Version:', cacheVersion);
     
-    console.log('✅ App.js v2.4 ready for initialization');
+    console.log('✅ App.js v2.5 ready for initialization');
 })();
