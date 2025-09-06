@@ -4,36 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Norsk Nyhetskanal - Azure Static Web App</title>
-    
+
     <!-- CSS -->
     <link rel="stylesheet" href="/css/styles.css">
-    
+
     <!-- Meta tags -->
     <meta name="description" content="Azure Static Web App broadcast system med Dataverse integrasjon">
     <meta name="keywords" content="azure, static web app, broadcast, nyheter, dataverse, microsoft">
     <meta name="author" content="Azure Broadcast System">
     <meta name="theme-color" content="#1e3c72">
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="Norsk TV - Azure Broadcast System">
     <meta property="og:description" content="Professional broadcast system powered by Azure Static Web Apps">
     <meta property="og:type" content="website">
-    
+
     <!-- Favicon -->
     <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    
+
     <!-- Preload critical resources -->
     <link rel="preload" href="/css/styles.css" as="style">
     <link rel="preload" href="/js/app.js" as="script">
     <link rel="preconnect" href="https://alcdn.msauth.net">
     <link rel="preconnect" href="https://login.microsoftonline.com">
     <link rel="preconnect" href="https://beredskap360utv.api.crm4.dynamics.com">
-    
+
     <!-- Security headers via meta tags -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-    
+
     <!-- Initial loader styles -->
     <style>
         .initial-loader {
@@ -49,24 +49,24 @@
             z-index: 9999;
             transition: opacity 0.3s ease;
         }
-        
+
         .loader-content {
             text-align: center;
             color: white;
         }
-        
+
         .loader-logo {
             font-size: 4rem;
             margin-bottom: 20px;
             animation: pulse 2s ease-in-out infinite;
         }
-        
+
         .loader-text {
             font-size: 1.5rem;
             margin-bottom: 30px;
             opacity: 0.9;
         }
-        
+
         .loader-spinner {
             width: 40px;
             height: 40px;
@@ -76,18 +76,18 @@
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
-        
+
         .loader-status {
             margin-top: 20px;
             font-size: 1rem;
             opacity: 0.8;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         @keyframes pulse {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.05); opacity: 0.8; }
@@ -113,19 +113,19 @@
             <p style="margin: 20px 0; color: #666;">
                 Logg inn med Microsoft-kontoen din for å få tilgang til sendestudiet
             </p>
-            
+
             <button class="login-btn" id="loginBtn" aria-label="Logg inn med Microsoft">
                 🔐 Logg inn med Microsoft
             </button>
-            
+
             <div class="loading" id="loginLoading">
                 <div class="spinner"></div>
                 <p style="margin-top: 10px;">Logger inn...</p>
             </div>
-            
+
             <div class="error-message" id="loginError" role="alert"></div>
             <div class="success-message" id="loginSuccess" role="status"></div>
-            
+
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 0.9rem; color: #666;">
                 <strong>Azure Static Web App</strong><br>
                 Version: 1.0.0 | Environment: Production<br>
@@ -152,13 +152,13 @@
         </header>
 
         <div class="time-display" id="currentTime" role="timer" aria-live="polite"></div>
-        
+
         <div class="live-countdown" id="liveCountdown" role="timer" aria-live="polite">
             <div><strong>🔴 NESTE SENDING</strong></div>
             <div class="countdown-number" id="liveCountdownNumber">--</div>
             <div id="liveCountdownText">sekunder</div>
         </div>
-        
+
         <main class="background-screen" id="backgroundScreen" role="main">
             <div class="logo-container">
                 <h1 class="logo">NORSK TV</h1>
@@ -177,11 +177,11 @@
 
         <section class="video-container" id="videoContainer" role="main" aria-label="Video avspilling">
             <div class="video-content">
-                <video 
-                    id="realVideo" 
-                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: none;" 
-                    muted 
-                    autoplay 
+                <video
+                    id="realVideo" crossorigin="anonymous"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: none;"
+                    muted
+                    autoplay
                     playsinline
                     loop="false"
                     preload="metadata"
@@ -224,7 +224,7 @@
     <script>
         console.log('📄 Loading MSAL.js library...');
         document.getElementById('loaderStatus').textContent = 'Laster autentisering...';
-        
+
         (function() {
             const msalUrls = [
                 // Microsoft CDN (latest available version)
@@ -234,9 +234,9 @@
                 'https://unpkg.com/@azure/msal-browser@3.24.0/lib/msal-browser.min.js',
                 'https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.24.0/lib/msal-browser.min.js'
             ];
-            
+
             let currentUrl = 0;
-            
+
             function loadMsal() {
                 if (currentUrl >= msalUrls.length) {
                     console.error('❌ Failed to load MSAL from all CDNs');
@@ -247,42 +247,42 @@
                     }, 2000);
                     return;
                 }
-                
+
                 const script = document.createElement('script');
                 script.src = msalUrls[currentUrl];
                 script.defer = true;
                 script.crossOrigin = 'anonymous';
-                
+
                 script.onload = function() {
                     console.log('✅ MSAL loaded successfully from:', msalUrls[currentUrl]);
                     document.getElementById('loaderStatus').textContent = 'Laster applikasjon...';
                     loadAppScript();
                 };
-                
+
                 script.onerror = function() {
                     console.warn('⚠️ Failed to load MSAL from:', msalUrls[currentUrl]);
                     currentUrl++;
                     setTimeout(loadMsal, 1000); // Wait 1 second before trying next URL
                 };
-                
+
                 document.head.appendChild(script);
             }
-            
+
             loadMsal();
         })();
-        
+
         // Load main app script
         function loadAppScript() {
             const script = document.createElement('script');
             script.src = '/js/app.js';
             script.defer = true;
-            
+
             script.onload = function() {
                 console.log('✅ App script loaded successfully');
                 document.getElementById('loaderStatus').textContent = 'Starter applikasjon...';
                 // App will initialize via DOMContentLoaded
             };
-            
+
             script.onerror = function() {
                 console.error('❌ Failed to load app script');
                 document.getElementById('loaderStatus').textContent = 'Feil ved lasting av applikasjon';
@@ -291,7 +291,7 @@
                     hideInitialLoader();
                 }, 2000);
             };
-            
+
             document.head.appendChild(script);
         }
     </script>
@@ -300,7 +300,7 @@
     <script>
         // Performance monitoring
         const perfStart = performance.now();
-        
+
         // Hide initial loader
         function hideInitialLoader() {
             const loader = document.getElementById('initialLoader');
@@ -320,7 +320,7 @@
             console.log('🔐 Authentication: Microsoft MSAL.js');
             console.log('🗃️ Data Source: Microsoft Dataverse');
             console.log('🔑 Client ID: e7174676-e8bb-446b-9260-af3f28086458');
-            
+
             // Check if all required dependencies are loaded
             if (typeof msal === 'undefined') {
                 console.error('❌ MSAL library not loaded');
@@ -335,7 +335,7 @@
                 hideInitialLoader();
                 return;
             }
-            
+
             try {
                 // Start the application
                 window.broadcastApp = new AzureBroadcastApp();
@@ -351,7 +351,7 @@
         // Wait for DOM and all scripts to be ready
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 DOM loaded, checking script dependencies...');
-            
+
             // Check if scripts are already loaded
             if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
                 initializeApp();
@@ -359,23 +359,23 @@
                 // Wait for scripts to load
                 let attempts = 0;
                 const maxAttempts = 20; // Increased attempts
-                
+
                 const checkScripts = setInterval(() => {
                     attempts++;
                     console.log(`🔍 Checking dependencies... attempt ${attempts}/${maxAttempts}`);
-                    
+
                     if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
                         clearInterval(checkScripts);
                         initializeApp();
                     } else if (attempts >= maxAttempts) {
                         clearInterval(checkScripts);
                         console.error('❌ Dependencies failed to load after maximum attempts');
-                        
+
                         let missingDeps = [];
                         if (typeof msal === 'undefined') missingDeps.push('MSAL.js');
                         if (typeof AzureBroadcastApp === 'undefined') missingDeps.push('App.js');
-                        
-                        document.getElementById('loginError').textContent = 
+
+                        document.getElementById('loginError').textContent =
                             `Kunne ikke laste: ${missingDeps.join(', ')}. Sjekk internettforbindelsen og prøv igjen.`;
                         hideInitialLoader();
                     }
@@ -421,13 +421,13 @@
         window.addEventListener('load', function() {
             const loadTime = performance.now() - perfStart;
             console.log(`📊 Total initialization time: ${Math.round(loadTime)}ms`);
-            
+
             // Log performance metrics
             if (window.performance && window.performance.timing) {
                 const timing = window.performance.timing;
                 const totalLoadTime = timing.loadEventEnd - timing.navigationStart;
                 const domReadyTime = timing.domContentLoadedEventEnd - timing.navigationStart;
-                
+
                 console.log(`📊 Page load: ${totalLoadTime}ms`);
                 console.log(`📊 DOM ready: ${domReadyTime}ms`);
             }

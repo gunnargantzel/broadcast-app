@@ -578,7 +578,117 @@ class AzureBroadcastApp {
         const videoUrl = program[`${prefix}videourl`];
         if (videoUrl && videoUrl.trim() && this.isValidVideoUrl(videoUrl.trim())) {
             console.log(`🎥 Loading video with audio: ${videoUrl}`);
-            this.tryLoadRealVideo(videoUrl.trim(), program[`${prefix}programtype`]);
+            this.
+    tryLoadRealVideo(videoUrl, programType) {
+        const video = document.getElementById('realVideo');
+        if (!video) return;
+
+        // Basic visibility
+        video.style.display = 'block';
+
+        // Clear old event handlers and sources
+        video.onloadedmetadata = null;
+        video.oncanplaythrough = null;
+        video.onplay = null;
+        video.onpause = null;
+        video.ontimeupdate = null;
+        video.onseeking = null;
+        video.onseeked = null;
+        video.onwaiting = null;
+        video.onplaying = null;
+
+        // remove all <source> children
+        while (video.firstChild) video.removeChild(video.firstChild);
+
+        // Hard reset before assigning
+        video.pause();
+        video.currentTime = 0;
+        video.removeAttribute('src');
+        video.load();
+
+        // Playback policy & attrs
+        video.setAttribute('crossorigin', 'anonymous'); // enable CORS fetch
+        video.playsInline = true;                       // iOS
+        video.autoplay = true;
+        video.muted = true;                             // allow autoplay; user can enable sound
+        video.loop = false;
+        video.controls = false;
+        video.preload = 'metadata';
+        video.disablePictureInPicture = true;
+
+        // Diagnostics
+        const reportVideoError = () => {
+            const errCode = video.error && video.error.code;
+            console.warn('Video error', {
+                code: errCode,
+                networkState: video.networkState,
+                readyState: video.readyState,
+                url: videoUrl
+            });
+        };
+        video.addEventListener('error', reportVideoError, { once: true });
+        video.addEventListener('stalled', () => console.warn('Video stalled'));
+        video.addEventListener('abort', () => console.warn('Video aborted'));
+
+        console.log('canPlayType(H.264/AAC):', video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'));
+
+        // Attach <source> with explicit type
+        const source = document.createElement('source');
+        source.src = videoUrl;
+        const lower = videoUrl.toLowerCase();
+        if (lower.endsWith('.mp4')) {
+            source.type = 'video/mp4';
+        } else if (lower.endsWith('.webm')) {
+            source.type = 'video/webm';
+        }
+        video.appendChild(source);
+
+        // Prepare an unmute button (shows only while muted)
+        let unmuteBtn = document.getElementById('unmuteBtn');
+        if (!unmuteBtn) {
+            unmuteBtn = document.createElement('button');
+            unmuteBtn.id = 'unmuteBtn';
+            unmuteBtn.textContent = '🔊 Slå på lyd';
+            Object.assign(unmuteBtn.style, {
+                position: 'absolute',
+                right: '1rem',
+                bottom: '1rem',
+                zIndex: '9999',
+                padding: '0.6rem 0.9rem',
+                borderRadius: '10px',
+                border: 'none',
+                cursor: 'pointer',
+                background: 'white'
+            });
+            const vc = document.getElementById('videoContainer') || video.parentElement;
+            vc && vc.appendChild(unmuteBtn);
+            unmuteBtn.addEventListener('click', () => {
+                try {
+                    video.muted = false;
+                    video.volume = 1.0;
+                    unmuteBtn.style.display = 'none';
+                    // Some browsers require explicit play after gesture
+                    const p = video.play();
+                    if (p && p.catch) p.catch(()=>{});
+                } catch {}
+            });
+        }
+        unmuteBtn.style.display = 'inline-flex';
+
+        // Load and auto-play
+        console.log(`🔗 Loading video: ${videoUrl.substring(0, 120)}...`);
+        video.load();
+        const playPromise = video.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch(err => {
+                console.warn('Autoplay prevented, waiting for user gesture:', err);
+            });
+        }
+
+        // Safety: ensure no loop
+        setTimeout(() => { video.loop = false; }, 500);
+    }
+programtype`]);
         } else {
             console.log(`🎨 Using animated fallback for: ${program[`${prefix}programtype`]}`);
             this.showAnimatedProgram(program[`${prefix}programtype`]);
@@ -1233,4 +1343,30 @@ window.emergencyStopVideo = function() {
     console.log('🔄 Cache Version:', cacheVersion);
     
     console.log('✅ App.js v2.5 ready for initialization');
+})();
+
+
+// ---- DEBUG: simple video test panel (remove or toggle as needed) ----
+(function addVideoTestPanel(){
+  try{
+    if (document.getElementById('videoTestPanel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'videoTestPanel';
+    Object.assign(panel.style, {
+      position:'fixed', left:'1rem', bottom:'1rem', zIndex:'9998',
+      display:'grid', gap:'0.5rem', padding:'0.5rem', background:'rgba(0,0,0,0.4)', borderRadius:'8px'
+    });
+    const urls = [
+      {label:'OpenCare.mp4', url:'https://poweraitestaistorage.blob.core.windows.net/videos/OpenCare.mp4'},
+      {label:'How.mp4',     url:'https://poweraitestaistorage.blob.core.windows.net/videos/How.mp4'}
+    ];
+    urls.forEach(u=>{
+      const b=document.createElement('button');
+      b.textContent='Spill: '+u.label;
+      Object.assign(b.style,{padding:'0.4rem 0.6rem', borderRadius:'8px', cursor:'pointer'});
+      b.onclick=()=>{ try { window.app && app.tryLoadRealVideo ? app.tryLoadRealVideo(u.url, 'news') : console.warn('app.tryLoadRealVideo not found'); } catch(e){ console.warn(e);} };
+      panel.appendChild(b);
+    });
+    document.body.appendChild(panel);
+  }catch(e){ console.warn('Debug panel error', e); }
 })();
