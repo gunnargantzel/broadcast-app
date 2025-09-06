@@ -1,1 +1,60 @@
-
+{
+  "routes": [
+    {
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/css/*", "/js/*", "/assets/*", "*.{css,js,jpg,png,gif,ico,svg,woff,woff2,ttf,eot}"]
+  },
+  "responseOverrides": {
+    "400": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    },
+    "401": {
+      "rewrite": "/index.html", 
+      "statusCode": 200
+    },
+    "403": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    },
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://alcdn.msauth.net https://alcdn.msftauth.net https://unpkg.com https://cdn.jsdelivr.net https://login.microsoftonline.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; media-src 'self' https://*.blob.core.windows.net https://*.amazonaws.com https://*.googleapis.com blob: data:; connect-src 'self' https://login.microsoftonline.com https://beredskap360utv.api.crm4.dynamics.com https://globaldisco.crm4.dynamics.com https://*.azurestaticapps.net https://*.blob.core.windows.net; font-src 'self' https: data:; object-src 'none'; base-uri 'self'; form-action 'self';"
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".js": "text/javascript",
+    ".css": "text/css",
+    ".html": "text/html",
+    ".png": "image/png",
+    ".jpg": "image/jpeg", 
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".ttf": "font/ttf",
+    ".eot": "application/vnd.ms-fontobject",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm"
+  },
+  "trailingSlash": "auto",
+  "platform": {
+    "apiRuntime": "node:18"
+  }
+}
