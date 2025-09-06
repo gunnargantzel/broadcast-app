@@ -40,11 +40,11 @@ try {
 class AzureBroadcastApp {
     constructor() {
         console.log('🎬 Initializing AzureBroadcastApp v2.5 - NO LOOP + AUDIO...');
-        
+
         if (!msalInstance) {
             throw new Error('MSAL instance not available. Cannot initialize app.');
         }
-        
+
         this.accessToken = null;
         this.currentUser = null;
         this.broadcastSchedule = [];
@@ -61,35 +61,35 @@ class AzureBroadcastApp {
         this.programEndTimeout = null;
         this.newsTableExists = false;
         this.programEndedManually = false; // NEW: Track manual program end
-        
+
         this.programContent = {
-            weather: { 
-                icon: '🌤️', 
-                color: 'linear-gradient(135deg, #4FC3F7, #29B6F6)', 
+            weather: {
+                icon: '🌤️',
+                color: 'linear-gradient(135deg, #4FC3F7, #29B6F6)',
                 description: 'Værvarsel for Norge',
                 subtitle: 'Oppdatert værmelding fra Meteorologisk institutt'
             },
-            sports: { 
-                icon: '⚽', 
-                color: 'linear-gradient(135deg, #66BB6A, #4CAF50)', 
+            sports: {
+                icon: '⚽',
+                color: 'linear-gradient(135deg, #66BB6A, #4CAF50)',
                 description: 'Sportsresultater',
                 subtitle: 'Siste nytt fra norsk og internasjonal idrett'
             },
-            news: { 
-                icon: '📰', 
-                color: 'linear-gradient(135deg, #FF7043, #FF5722)', 
+            news: {
+                icon: '📰',
+                color: 'linear-gradient(135deg, #FF7043, #FF5722)',
                 description: 'Siste nyheter',
                 subtitle: 'Viktige nyhetsoppdateringer fra Norge og verden'
             },
-            traffic: { 
-                icon: '🚗', 
-                color: 'linear-gradient(135deg, #FFA726, #FF9800)', 
+            traffic: {
+                icon: '🚗',
+                color: 'linear-gradient(135deg, #FFA726, #FF9800)',
                 description: 'Trafikkinfo',
                 subtitle: 'Trafikksituasjonen i Norge akkurat nå'
             },
-            culture: { 
-                icon: '🎭', 
-                color: 'linear-gradient(135deg, #AB47BC, #9C27B0)', 
+            culture: {
+                icon: '🎭',
+                color: 'linear-gradient(135deg, #AB47BC, #9C27B0)',
                 description: 'Kultur og underholdning',
                 subtitle: 'Fra kunst, kultur og underholdningsbransjen'
             }
@@ -97,7 +97,7 @@ class AzureBroadcastApp {
 
         this.newsItems = ['Azure Broadcast System v2.5 initialiseres...'];
         this.currentNewsIndex = 0;
-        
+
         this.init();
     }
 
@@ -106,7 +106,7 @@ class AzureBroadcastApp {
             console.log('🚀 Azure Broadcast App v2.5 starter...');
             console.log('🎥 Anti-Loop: AGGRESSIVE MODE');
             console.log('🔊 Audio: ENABLED');
-            
+
             this.setupEventListeners();
             await this.handleAuthRedirect();
         } catch (error) {
@@ -119,20 +119,20 @@ class AzureBroadcastApp {
         try {
             const loginBtn = document.getElementById('loginBtn');
             const logoutBtn = document.getElementById('logoutBtn');
-            
+
             if (loginBtn) {
                 loginBtn.addEventListener('click', () => this.login());
             }
-            
+
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => this.logout());
             }
-            
+
             window.addEventListener('focus', () => this.handlePageFocus());
             window.addEventListener('blur', () => this.handlePageBlur());
             window.addEventListener('online', () => this.handleNetworkOnline());
             window.addEventListener('offline', () => this.handleNetworkOffline());
-            
+
             console.log('✅ Event listeners setup complete');
         } catch (error) {
             console.error('❌ Failed to setup event listeners:', error);
@@ -143,7 +143,7 @@ class AzureBroadcastApp {
         try {
             console.log('🔍 Checking authentication status...');
             const response = await msalInstance.handleRedirectPromise();
-            
+
             if (response) {
                 console.log('✅ Login redirect successful');
                 this.currentUser = response.account;
@@ -168,7 +168,7 @@ class AzureBroadcastApp {
         try {
             console.log('🔐 Starting login process...');
             this.showLoading(true);
-            
+
             const loginRequest = {
                 scopes: [
                     'https://beredskap360utv.api.crm4.dynamics.com/user_impersonation',
@@ -201,39 +201,39 @@ class AzureBroadcastApp {
         try {
             console.log('🚀 Initializing application v2.5...');
             this.showLoading(true);
-            
+
             await this.getAccessToken();
-            
+
             this.showElement('loginScreen', false);
             this.showElement('mainContainer', true);
-            
+
             const userDisplayElement = document.getElementById('userDisplayName');
             if (userDisplayElement) {
-                userDisplayElement.textContent = 
+                userDisplayElement.textContent =
                     this.currentUser.name || this.currentUser.username || 'Ukjent bruker';
             }
-            
+
             this.startClock();
             await this.loadBroadcastSchedule();
             this.startScheduleChecker();
             this.startNewsRotation();
-            
+
             this.showSuccess('✅ Koblet til Azure og Dataverse v2.5!');
             console.log('✅ Application v2.5 initialized successfully');
-            
+
         } catch (error) {
             console.error('❌ App initialization error:', error);
             this.showError('Kunne ikke starte app: ' + error.message);
             this.initializeDemoMode();
         }
-        
+
         this.showLoading(false);
     }
 
     async getAccessToken() {
         try {
             console.log('🔑 Acquiring access token...');
-            
+
             const tokenRequest = {
                 scopes: ['https://beredskap360utv.api.crm4.dynamics.com/user_impersonation'],
                 account: this.currentUser
@@ -241,12 +241,12 @@ class AzureBroadcastApp {
 
             const response = await msalInstance.acquireTokenSilent(tokenRequest);
             this.accessToken = response.accessToken;
-            
+
             console.log('✅ Access token acquired successfully');
-            
+
         } catch (error) {
             console.warn('⚠️ Silent token acquisition failed, trying interactive:', error);
-            
+
             try {
                 const response = await msalInstance.acquireTokenRedirect(tokenRequest);
                 this.accessToken = response.accessToken;
@@ -261,11 +261,11 @@ class AzureBroadcastApp {
         try {
             console.log('📅 Loading broadcast schedule from Dataverse...');
             this.updateDataverseStatus('Laster sendeskjema...');
-            
+
             if (!this.accessToken) {
                 throw new Error('Mangler access token');
             }
-            
+
             const headers = {
                 'Authorization': `Bearer ${this.accessToken}`,
                 'OData-MaxVersion': '4.0',
@@ -276,42 +276,42 @@ class AzureBroadcastApp {
 
             const tableName = `${dataverseConfig.tablePrefix}broadcastschedules`;
             const query = `${dataverseConfig.webApiEndpoint}/${tableName}?$filter=${dataverseConfig.tablePrefix}isactive eq true&$orderby=${dataverseConfig.tablePrefix}scheduledtime asc&$top=50`;
-            
-            const response = await fetch(query, { 
+
+            const response = await fetch(query, {
                 headers,
                 method: 'GET'
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ API Error Response:', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             const data = await response.json();
             this.broadcastSchedule = data.value || [];
             this.lastScheduleUpdate = new Date();
             this.retryCount = 0;
-            
+
             console.log(`✅ Loaded ${this.broadcastSchedule.length} programs from Dataverse`);
             this.updateScheduleDisplay();
             this.updateDataverseStatus(`${this.broadcastSchedule.length} programmer lastet`);
-            
+
         } catch (error) {
             console.error('❌ Dataverse error:', error);
             this.retryCount++;
-            
+
             if (this.retryCount <= this.maxRetries) {
                 console.log(`🔄 Retrying (${this.retryCount}/${this.maxRetries}) in 5 seconds...`);
                 this.updateDataverseStatus(`Feil - prøver igjen (${this.retryCount}/${this.maxRetries})`);
-                
+
                 setTimeout(() => {
                     this.loadBroadcastSchedule();
                 }, 5000);
             } else {
                 console.log('⚠️ Max retries reached, falling back to demo data');
                 this.updateDataverseStatus('Bruker demo-data');
-                
+
                 this.broadcastSchedule = this.createDemoSchedule();
                 this.updateScheduleDisplay();
                 this.showError('Dataverse utilgjengelig - bruker demo-data: ' + error.message);
@@ -323,19 +323,19 @@ class AzureBroadcastApp {
         console.log('📋 Creating demo schedule v2.5...');
         const now = new Date();
         const demoSchedule = [];
-        
+
         for (let i = 0; i < 20; i++) {
             const scheduledTime = new Date(now.getTime() + (i * 30 * 1000));
             const programTypes = ['weather', 'sports', 'news', 'traffic', 'culture'];
             const programNames = ['Værmelding', 'Sportsnytt', 'Nyhetsoppdatering', 'Trafikkmelding', 'Kulturnytt'];
-            
+
             const typeIndex = i % programTypes.length;
-            
+
             let demoVideoUrl = null;
             if (i === 0) {
                 demoVideoUrl = 'https://poweraitestaistorage.blob.core.windows.net/videos/How Investing in AI Video Drives Business Outcomes.mp4';
             }
-            
+
             demoSchedule.push({
                 [`${dataverseConfig.tablePrefix}broadcastscheduleid`]: `demo-${i}`,
                 [`${dataverseConfig.tablePrefix}name`]: `${programNames[typeIndex]} #${Math.floor(i/5) + 1}`,
@@ -348,7 +348,7 @@ class AzureBroadcastApp {
                 [`${dataverseConfig.tablePrefix}priority`]: i
             });
         }
-        
+
         console.log(`✅ Created ${demoSchedule.length} demo programs`);
         return demoSchedule;
     }
@@ -356,14 +356,14 @@ class AzureBroadcastApp {
     updateScheduleDisplay() {
         const scheduleList = document.getElementById('scheduleList');
         if (!scheduleList) return;
-        
+
         const now = new Date();
         const prefix = dataverseConfig.tablePrefix;
-        
+
         const upcomingPrograms = this.broadcastSchedule
             .filter(program => new Date(program[`${prefix}scheduledtime`]) > now)
             .slice(0, 8);
-        
+
         if (upcomingPrograms.length === 0) {
             scheduleList.innerHTML = `
                 <div style="color: #ffeb3b; text-align: center; padding: 20px;">
@@ -372,23 +372,23 @@ class AzureBroadcastApp {
                 </div>`;
             return;
         }
-        
+
         let html = '';
         upcomingPrograms.forEach((program, index) => {
             const scheduledTime = new Date(program[`${prefix}scheduledtime`]);
-            const timeString = scheduledTime.toLocaleTimeString('no-NO', { 
-                hour: '2-digit', 
+            const timeString = scheduledTime.toLocaleTimeString('no-NO', {
+                hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
             });
-            
+
             const timeUntil = Math.ceil((scheduledTime.getTime() - now.getTime()) / 1000);
             const isNext = index === 0;
             const isActive = timeUntil <= 60;
-            
+
             let statusColor = '#666';
             let statusText = '';
-            
+
             if (isNext) {
                 statusColor = '#4fc3f7';
                 statusText = '← NESTE';
@@ -396,17 +396,17 @@ class AzureBroadcastApp {
                 statusColor = '#ff9800';
                 statusText = '⚡ SNART';
             }
-            
+
             const programIcon = this.programContent[program[`${prefix}programtype`]]?.icon || '📺';
             const hasVideo = program[`${prefix}videourl`] && program[`${prefix}videourl`].trim();
             const videoIndicator = hasVideo ? '🎥🔊' : '🎨'; // Added sound icon for videos
-            
+
             html += `
                 <div style="
-                    margin: 8px 0; 
-                    padding: 12px; 
-                    border-left: 4px solid ${statusColor}; 
-                    background: ${isNext ? 'rgba(79, 195, 247, 0.1)' : isActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255,255,255,0.05)'}; 
+                    margin: 8px 0;
+                    padding: 12px;
+                    border-left: 4px solid ${statusColor};
+                    background: ${isNext ? 'rgba(79, 195, 247, 0.1)' : isActive ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255,255,255,0.05)'};
                     border-radius: 0 8px 8px 0;
                     transition: all 0.3s ease;
                 ">
@@ -429,9 +429,9 @@ class AzureBroadcastApp {
                 </div>
             `;
         });
-        
+
         scheduleList.innerHTML = html;
-        
+
         if (upcomingPrograms.length > 0) {
             this.nextBroadcastTime = new Date(upcomingPrograms[0][`${prefix}scheduledtime`]);
             this.currentProgramIndex = this.broadcastSchedule.indexOf(upcomingPrograms[0]);
@@ -441,8 +441,8 @@ class AzureBroadcastApp {
     startClock() {
         const updateClock = () => {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('no-NO', { 
-                hour: '2-digit', 
+            const timeString = now.toLocaleTimeString('no-NO', {
+                hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
             });
@@ -451,7 +451,7 @@ class AzureBroadcastApp {
                 clockElement.textContent = timeString;
             }
         };
-        
+
         updateClock();
         setInterval(updateClock, 1000);
         console.log('🕒 Clock started');
@@ -462,7 +462,7 @@ class AzureBroadcastApp {
             this.checkAndStartProgram();
             this.updateCountdown();
         }, 1000);
-        
+
         setInterval(() => {
             if (!this.isPlayingVideo && this.accessToken) {
                 const timeSinceUpdate = new Date() - this.lastScheduleUpdate;
@@ -472,32 +472,32 @@ class AzureBroadcastApp {
                 }
             }
         }, 30 * 1000);
-        
+
         console.log('⏰ Schedule checker started');
     }
 
     updateCountdown() {
         const liveCountdownElement = document.getElementById('liveCountdown');
         if (!liveCountdownElement) return;
-        
+
         if (this.isPlayingVideo || !this.nextBroadcastTime) {
             liveCountdownElement.style.display = 'none';
             return;
         }
-        
+
         liveCountdownElement.style.display = 'block';
-        
+
         const now = new Date();
         const timeDiff = this.nextBroadcastTime.getTime() - now.getTime();
         const secondsLeft = Math.max(0, Math.ceil(timeDiff / 1000));
-        
+
         const countdownNumber = document.getElementById('liveCountdownNumber');
         const countdownText = document.getElementById('liveCountdownText');
-        
+
         if (countdownNumber) {
             countdownNumber.textContent = secondsLeft;
         }
-        
+
         if (countdownText) {
             if (secondsLeft <= 3) {
                 liveCountdownElement.style.background = 'linear-gradient(135deg, #ff1744, #d50000)';
@@ -514,9 +514,9 @@ class AzureBroadcastApp {
 
     checkAndStartProgram() {
         if (this.isPlayingVideo || !this.nextBroadcastTime) return;
-        
+
         const now = new Date();
-        
+
         if (now >= this.nextBroadcastTime) {
             const currentProgram = this.broadcastSchedule[this.currentProgramIndex];
             if (currentProgram) {
@@ -533,19 +533,19 @@ class AzureBroadcastApp {
     isValidVideoUrl(url) {
         try {
             const urlObj = new URL(url);
-            
+
             if (!urlObj.protocol.startsWith('http')) {
                 return false;
             }
-            
+
             const pathname = urlObj.pathname.toLowerCase();
             const validExtensions = ['.mp4', '.webm', '.avi', '.mov', '.mkv', '.m4v'];
-            const isBlobStorage = urlObj.hostname.includes('.blob.core.windows.net') || 
+            const isBlobStorage = urlObj.hostname.includes('.blob.core.windows.net') ||
                                  urlObj.hostname.includes('.amazonaws.com') ||
                                  urlObj.hostname.includes('.googleapis.com');
-            
+
             return isBlobStorage || validExtensions.some(ext => pathname.includes(ext));
-            
+
         } catch (error) {
             console.log(`❌ URL validation failed: ${error.message}`);
             return false;
@@ -555,38 +555,82 @@ class AzureBroadcastApp {
     async startProgram(program) {
         const prefix = dataverseConfig.tablePrefix;
         console.log(`🎬 Starting program: ${program[`${prefix}name`]}`);
-        
+
         // CRITICAL: Set flags immediately
         this.isPlayingVideo = true;
         this.programEndedManually = false; // Reset manual end flag
-        
+
         // Clear any existing timeouts
         if (this.programEndTimeout) {
             clearTimeout(this.programEndTimeout);
             this.programEndTimeout = null;
         }
-        
+
         this.showElement('backgroundScreen', false);
         this.showElement('videoContainer', true);
         this.showElement('liveCountdown', false);
-        
+
         const titleElement = document.getElementById('currentProgramTitle');
         if (titleElement) {
             titleElement.textContent = program[`${prefix}name`];
         }
-        
+
         const videoUrl = program[`${prefix}videourl`];
         if (videoUrl && videoUrl.trim() && this.isValidVideoUrl(videoUrl.trim())) {
             console.log(`🎥 Loading video with audio: ${videoUrl}`);
-            this.
+            this.tryLoadRealVideo(videoUrl.trim(), program[`${prefix}programtype`]);
+        } else {
+            console.log(`🎨 Using animated fallback for: ${program[`${prefix}programtype`]}`);
+            this.showAnimatedProgram(program[`${prefix}programtype`]);
+        }
+
+        this.startProgressBar(program[`${prefix}duration`]);
+
+        // Set program end timeout - THIS IS THE MASTER TIMER
+        this.programEndTimeout = setTimeout(() => {
+            console.log('⏰ Program duration reached - ending program');
+            this.endProgram();
+        }, program[`${prefix}duration`] * 1000);
+
+        this.updateDataverseStatus(`Sender: ${program[`${prefix}name`]}`);
+    }
+
+    // AGGRESSIVE ANTI-LOOP VIDEO LOADING
     tryLoadRealVideo(videoUrl, programType) {
+
         const video = document.getElementById('realVideo');
-        if (!video) return;
+        const animatedProgram = document.getElementById('animatedProgram');
 
-        // Basic visibility
-        video.style.display = 'block';
+        if (!video || !animatedProgram) return;
 
-        // Clear old event handlers and sources
+        // Clear any existing timeout
+        if (this.currentVideoTimeout) {
+            clearTimeout(this.currentVideoTimeout);
+            this.currentVideoTimeout = null;
+        }
+
+        // AGGRESSIVE RESET
+        video.style.display = 'none';
+        animatedProgram.style.display = 'none';
+
+        // Remove ALL possible event listeners
+        const eventTypes = ['loadeddata', 'error', 'ended', 'canplay', 'loadstart', 'progress',
+                           'loadedmetadata', 'canplaythrough', 'play', 'pause', 'timeupdate',
+                           'seeking', 'seeked', 'waiting', 'playing'];
+
+        eventTypes.forEach(eventType => {
+            video.removeEventListener(eventType, this.handleVideoEvent);
+        });
+
+        // Clear all on* properties
+        video.onloadeddata = null;
+        video.onerror = null;
+        video.onended = null;
+        video.oncanplay = null;
+        video.onloadstart = null;
+        video.onprogress = null;
+        video.onstalled = null;
+        video.onsuspend = null;
         video.onloadedmetadata = null;
         video.oncanplaythrough = null;
         video.onplay = null;
@@ -597,14 +641,12 @@ class AzureBroadcastApp {
         video.onwaiting = null;
         video.onplaying = null;
 
-        // remove all <source> children
-        while (video.firstChild) video.removeChild(video.firstChild);
-
-        // Hard reset before assigning
+        // COMPLETE RESET
         video.pause();
         video.currentTime = 0;
         video.removeAttribute('src');
-        video.load();
+        while (video.firstChild) video.removeChild(video.firstChild);
+        video.load(); // Force reset
 
         // Playback policy & attrs
         video.setAttribute('crossorigin', 'anonymous'); // enable CORS fetch
@@ -618,7 +660,8 @@ class AzureBroadcastApp {
 
         // Diagnostics
         const reportVideoError = () => {
-            const errCode = video.error && video.error.code;
+            const err = video.error;
+            const errCode = err && err.code;
             console.warn('Video error', {
                 code: errCode,
                 networkState: video.networkState,
@@ -632,10 +675,49 @@ class AzureBroadcastApp {
 
         console.log('canPlayType(H.264/AAC):', video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'));
 
+        // Handlers
+        const handleVideoLoaded = () => {
+            console.log('✅ Video is ready to play');
+            // Show video
+            video.style.display = 'block';
+            animatedProgram.style.display = 'none';
+
+            // Anti-loop safeguards
+            video.loop = false;
+            setTimeout(() => { video.loop = false; }, 100);
+
+            // Try play (autoplay should succeed because muted=true)
+            const p = video.play();
+            if (p && p.catch) {
+                p.catch(e => {
+                    console.log('⚠️ Autoplay prevented, will wait for user gesture', e);
+                });
+            }
+        };
+
+        const handleVideoEnded = () => {
+            console.log('📺 Video ended - NOT restarting');
+            video.pause();
+            video.currentTime = 0;
+            video.removeAttribute('src');
+            video.loop = false;
+        };
+
+        const handleVideoError = (e) => {
+            // Fallback to animated program
+            console.log('❌ Video error, showing animated fallback');
+            this.showAnimatedProgram(programType);
+        };
+
+        // Set event handlers
+        video.addEventListener('loadeddata', handleVideoLoaded, { once: true });
+        video.addEventListener('ended', handleVideoEnded);
+        video.addEventListener('error', handleVideoError, { once: true });
+
         // Attach <source> with explicit type
+        const lower = (videoUrl || '').toLowerCase().trim();
         const source = document.createElement('source');
         source.src = videoUrl;
-        const lower = videoUrl.toLowerCase();
         if (lower.endsWith('.mp4')) {
             source.type = 'video/mp4';
         } else if (lower.endsWith('.webm')) {
@@ -667,16 +749,15 @@ class AzureBroadcastApp {
                     video.muted = false;
                     video.volume = 1.0;
                     unmuteBtn.style.display = 'none';
-                    // Some browsers require explicit play after gesture
-                    const p = video.play();
-                    if (p && p.catch) p.catch(()=>{});
+                    const p2 = video.play();
+                    if (p2 && p2.catch) p2.catch(()=>{});
                 } catch {}
             });
         }
         unmuteBtn.style.display = 'inline-flex';
 
-        // Load and auto-play
-        console.log(`🔗 Loading video: ${videoUrl.substring(0, 120)}...`);
+        // Load and auto-play (muted)
+        console.log(`🔗 Loading video: ${String(videoUrl).substring(0, 120)}...`);
         video.load();
         const playPromise = video.play();
         if (playPromise && playPromise.catch) {
@@ -687,198 +768,28 @@ class AzureBroadcastApp {
 
         // Safety: ensure no loop
         setTimeout(() => { video.loop = false; }, 500);
-    }
-programtype`]);
-        } else {
-            console.log(`🎨 Using animated fallback for: ${program[`${prefix}programtype`]}`);
-            this.showAnimatedProgram(program[`${prefix}programtype`]);
-        }
-        
-        this.startProgressBar(program[`${prefix}duration`]);
 
-        // Set program end timeout - THIS IS THE MASTER TIMER
-        this.programEndTimeout = setTimeout(() => {
-            console.log('⏰ Program duration reached - ending program');
-            this.endProgram();
-        }, program[`${prefix}duration`] * 1000);
-        
-        this.updateDataverseStatus(`Sender: ${program[`${prefix}name`]}`);
-    }
-
-    // AGGRESSIVE ANTI-LOOP VIDEO LOADING
-    tryLoadRealVideo(videoUrl, programType) {
-        const video = document.getElementById('realVideo');
-        const animatedProgram = document.getElementById('animatedProgram');
-        
-        if (!video || !animatedProgram) return;
-        
-        // Clear any existing timeout
-        if (this.currentVideoTimeout) {
-            clearTimeout(this.currentVideoTimeout);
-            this.currentVideoTimeout = null;
-        }
-        
-        // AGGRESSIVE RESET
-        video.style.display = 'none';
-        animatedProgram.style.display = 'none';
-        
-        // Remove ALL possible event listeners
-        const eventTypes = ['loadeddata', 'error', 'ended', 'canplay', 'loadstart', 'progress', 
-                           'loadedmetadata', 'canplaythrough', 'play', 'pause', 'timeupdate', 
-                           'seeking', 'seeked', 'waiting', 'playing'];
-        
-        eventTypes.forEach(eventType => {
-            video.removeEventListener(eventType, this.handleVideoEvent);
-        });
-        
-        // Clear all on* properties
-        video.onloadeddata = null;
-        video.onerror = null;
-        video.onended = null;
-        video.oncanplay = null;
-        video.onloadstart = null;
-        video.onprogress = null;
-        video.onloadedmetadata = null;
-        video.oncanplaythrough = null;
-        video.onplay = null;
-        video.onpause = null;
-        video.ontimeupdate = null;
-        video.onseeking = null;
-        video.onseeked = null;
-        video.onwaiting = null;
-        video.onplaying = null;
-        
-        // COMPLETE RESET
-        video.pause();
-        video.currentTime = 0;
-        video.src = '';
-        video.load(); // Force reset
-        
-        // ANTI-LOOP PROPERTIES - SET MULTIPLE TIMES
-        video.loop = false;
-        video.controls = false;
-        video.autoplay = true;
-        video.muted = false; // ENABLE AUDIO
-        video.volume = 1.0; // Full volume
-        video.playsInline = true;
-        video.preload = 'metadata';
-        video.disablePictureInPicture = true;
-        
-        // Force anti-loop properties again
-        setTimeout(() => {
-            video.loop = false;
-        }, 100);
-        
-        this.currentVideoTimeout = setTimeout(() => {
-            console.log('⏰ Video loading timeout');
-            this.showAnimatedProgram(programType);
-            this.currentVideoTimeout = null;
-        }, 15000);
-        
-        // SINGLE EVENT HANDLER APPROACH
-        const handleVideoLoaded = () => {
-            console.log('✅ Video loaded with audio enabled');
-            if (this.currentVideoTimeout) {
-                clearTimeout(this.currentVideoTimeout);
-                this.currentVideoTimeout = null;
-            }
-            
-            video.style.display = 'block';
-            animatedProgram.style.display = 'none';
-            
-            // FORCE ANTI-LOOP AGAIN
-            video.loop = false;
-            video.currentTime = 0;
-            
-            // Try to play with audio
-            video.play().then(() => {
-                console.log('▶️ Video playing with audio');
-                // Force anti-loop one more time after play starts
-                setTimeout(() => {
-                    video.loop = false;
-                }, 500);
-            }).catch(e => {
-                console.log(`❌ Video autoplay failed: ${e.message}`);
-                console.log('🔇 Trying with muted...');
-                video.muted = true;
-                video.play().catch(e2 => {
-                    console.log(`❌ Muted autoplay also failed: ${e2.message}`);
-                    this.showAnimatedProgram(programType);
-                });
-            });
-        };
-        
-        const handleVideoEnded = () => {
-            console.log('📺 Video ended - PREVENTING ANY RESTART');
-            
-            // AGGRESSIVE STOP
-            video.pause();
-            video.currentTime = 0;
-            video.src = '';
-            video.loop = false;
-            
-            // DO NOT restart video - let program timer handle end
-            if (!this.programEndedManually) {
-                console.log('📺 Video ended naturally, waiting for program timer...');
-            }
-        };
-        
-        const handleVideoError = (e) => {
-            const error = video.error;
-            let errorMessage = 'Unknown error';
-            
-            if (error) {
-                const errorCodes = {
-                    1: 'MEDIA_ERR_ABORTED',
-                    2: 'MEDIA_ERR_NETWORK', 
-                    3: 'MEDIA_ERR_DECODE',
-                    4: 'MEDIA_ERR_SRC_NOT_SUPPORTED'
-                };
-                errorMessage = errorCodes[error.code] || 'Unknown error code';
-            }
-            
-            console.log(`❌ Video error: ${errorMessage}`);
-            if (this.currentVideoTimeout) {
-                clearTimeout(this.currentVideoTimeout);
-                this.currentVideoTimeout = null;
-            }
-            this.showAnimatedProgram(programType);
-        };
-        
-        // Set event handlers ONCE
-        video.addEventListener('loadeddata', handleVideoLoaded, { once: true });
-        video.addEventListener('ended', handleVideoEnded);
-        video.addEventListener('error', handleVideoError, { once: true });
-        
-        console.log(`🔗 Loading video: ${videoUrl.substring(0, 80)}...`);
-        video.src = videoUrl;
-        video.load();
-        
-        // FINAL SAFETY CHECK
-        setTimeout(() => {
-            video.loop = false;
-        }, 1000);
-    }
+}
 
     showAnimatedProgram(programType) {
         const video = document.getElementById('realVideo');
         const animatedProgram = document.getElementById('animatedProgram');
-        
+
         if (!video || !animatedProgram) return;
-        
+
         const content = this.programContent[programType] || this.programContent.news;
-        
+
         // AGGRESSIVE VIDEO STOP
         video.style.display = 'none';
         video.pause();
         video.currentTime = 0;
         video.src = '';
         video.loop = false;
-        
+
         // Show animation
         animatedProgram.style.display = 'flex';
         animatedProgram.style.background = content.color;
-        
+
         animatedProgram.innerHTML = `
             <div style="text-align: center; color: white;">
                 <div class="program-icon">${content.icon}</div>
@@ -887,7 +798,7 @@ programtype`]);
                 <div class="live-indicator">🔴 DIREKTE FRA AZURE v2.5</div>
             </div>
         `;
-        
+
         console.log(`✅ Animated program displayed: ${programType}`);
     }
 
@@ -895,45 +806,45 @@ programtype`]);
         let progress = 0;
         const progressBar = document.getElementById('progressBar');
         if (!progressBar) return;
-        
+
         progressBar.style.width = '0%';
-        
+
         if (this.videoProgressInterval) {
             clearInterval(this.videoProgressInterval);
         }
-        
+
         this.videoProgressInterval = setInterval(() => {
             progress += 100 / (duration * 10);
             const currentProgress = Math.min(progress, 100);
             progressBar.style.width = currentProgress + '%';
-            
+
             if (currentProgress >= 100) {
                 clearInterval(this.videoProgressInterval);
             }
         }, 100);
-        
+
         console.log(`📊 Progress bar started for ${duration}s`);
     }
 
     // COMPLETE PROGRAM END WITH AGGRESSIVE CLEANUP
     endProgram() {
         console.log('📺 ENDING PROGRAM v2.5 - AGGRESSIVE CLEANUP');
-        
+
         // Set flags immediately
         this.isPlayingVideo = false;
         this.programEndedManually = true;
-        
+
         // Clear ALL timeouts
         if (this.currentVideoTimeout) {
             clearTimeout(this.currentVideoTimeout);
             this.currentVideoTimeout = null;
         }
-        
+
         if (this.programEndTimeout) {
             clearTimeout(this.programEndTimeout);
             this.programEndTimeout = null;
         }
-        
+
         const video = document.getElementById('realVideo');
         if (video) {
             // NUCLEAR OPTION - COMPLETE VIDEO DESTRUCTION
@@ -941,16 +852,16 @@ programtype`]);
             video.currentTime = 0;
             video.src = '';
             video.style.display = 'none';
-            
+
             // Remove ALL event listeners
-            const eventTypes = ['loadeddata', 'error', 'ended', 'canplay', 'loadstart', 'progress', 
-                               'loadedmetadata', 'canplaythrough', 'play', 'pause', 'timeupdate', 
+            const eventTypes = ['loadeddata', 'error', 'ended', 'canplay', 'loadstart', 'progress',
+                               'loadedmetadata', 'canplaythrough', 'play', 'pause', 'timeupdate',
                                'seeking', 'seeked', 'waiting', 'playing'];
-            
+
             eventTypes.forEach(eventType => {
                 video.removeEventListener(eventType, this.handleVideoEvent);
             });
-            
+
             // Clear ALL on* properties
             video.onloadeddata = null;
             video.onerror = null;
@@ -967,24 +878,24 @@ programtype`]);
             video.onseeked = null;
             video.onwaiting = null;
             video.onplaying = null;
-            
+
             // FORCE ALL ANTI-LOOP PROPERTIES
             video.loop = false;
             video.autoplay = false;
             video.controls = false;
-            
+
             // Force load reset
             video.load();
-            
+
             console.log('💥 Video completely destroyed and reset');
         }
-        
+
         const animatedProgram = document.getElementById('animatedProgram');
         if (animatedProgram) {
             animatedProgram.style.display = 'none';
             animatedProgram.innerHTML = '';
         }
-        
+
         if (this.videoProgressInterval) {
             clearInterval(this.videoProgressInterval);
             this.videoProgressInterval = null;
@@ -993,14 +904,14 @@ programtype`]);
                 progressBar.style.width = '0%';
             }
         }
-        
+
         this.showElement('videoContainer', false);
         this.showElement('backgroundScreen', true);
         this.showElement('liveCountdown', true);
-        
+
         this.updateScheduleDisplay();
         this.updateDataverseStatus('Klar for neste sending');
-        
+
         console.log('✅ Program ended completely - ready for next broadcast');
     }
 
@@ -1013,17 +924,17 @@ programtype`]);
                 newsElement.textContent = this.newsItems[this.currentNewsIndex];
             }
         };
-        
+
         setInterval(rotateNews, 8000);
         this.loadNewsFromDataverse();
-        
+
         setInterval(() => {
             if (!this.isPlayingVideo && this.accessToken && this.newsTableExists) {
                 console.log('🔄 Auto-refreshing news...');
                 this.loadNewsFromDataverse();
             }
         }, 5 * 60 * 1000);
-        
+
         console.log('📰 News rotation started');
     }
 
@@ -1033,7 +944,7 @@ programtype`]);
                 this.setFallbackNews();
                 return;
             }
-            
+
             const headers = {
                 'Authorization': `Bearer ${this.accessToken}`,
                 'OData-MaxVersion': '4.0',
@@ -1043,7 +954,7 @@ programtype`]);
 
             const testQuery = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?$top=1`;
             const testResponse = await fetch(testQuery, { headers });
-            
+
             if (!testResponse.ok) {
                 if (testResponse.status === 404) {
                     console.log('📰 News table does not exist - using fallback news');
@@ -1055,9 +966,9 @@ programtype`]);
                     throw new Error(`Table check failed: ${testResponse.status}`);
                 }
             }
-            
+
             this.newsTableExists = true;
-            
+
             const now = new Date().toISOString();
             const query = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?` +
                 `$filter=${dataverseConfig.tablePrefix}isactive eq true and ` +
@@ -1065,17 +976,17 @@ programtype`]);
                 `$orderby=${dataverseConfig.tablePrefix}priority desc,${dataverseConfig.tablePrefix}publishdate desc&` +
                 `$top=20&` +
                 `$select=${dataverseConfig.tablePrefix}headline,${dataverseConfig.tablePrefix}name,${dataverseConfig.tablePrefix}category,${dataverseConfig.tablePrefix}source`;
-            
+
             const response = await fetch(query, { headers });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 if (data.value && data.value.length > 0) {
                     this.newsItems = data.value.map(item => {
-                        let newsText = item[`${dataverseConfig.tablePrefix}headline`] || 
-                                       item[`${dataverseConfig.tablePrefix}name`] || 
+                        let newsText = item[`${dataverseConfig.tablePrefix}headline`] ||
+                                       item[`${dataverseConfig.tablePrefix}name`] ||
                                        'Nyhetsoppdatering fra Dataverse';
-                        
+
                         const category = item[`${dataverseConfig.tablePrefix}category`];
                         const categoryEmojis = {
                             'Breaking': '🚨',
@@ -1086,19 +997,19 @@ programtype`]);
                             'Business': '💼',
                             'Technology': '💻'
                         };
-                        
+
                         if (category && categoryEmojis[category]) {
                             newsText = `${categoryEmojis[category]} ${newsText}`;
                         }
-                        
+
                         const source = item[`${dataverseConfig.tablePrefix}source`];
                         if (source) {
                             newsText += ` (${source})`;
                         }
-                        
+
                         return newsText;
                     });
-                    
+
                     console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse`);
                 } else {
                     this.setFallbackNews();
@@ -1125,7 +1036,7 @@ programtype`]);
             '⚡ Power Platform integrasjon for enkel administrasjon',
             '🎥 Støtte for lange blob storage URLs med SAS tokens'
         ];
-        
+
         console.log('📰 Using fallback news items v2.5');
     }
 
@@ -1163,7 +1074,7 @@ programtype`]);
     handleGlobalError(error) {
         console.error('🚨 Global error:', error);
         this.updateDataverseStatus('Feil oppstått');
-        
+
         if (this.accessToken) {
             this.showError('En feil oppstod: ' + (error.message || error));
         }
@@ -1171,28 +1082,28 @@ programtype`]);
 
     initializeDemoMode() {
         console.log('🎯 Initializing demo mode v2.5...');
-        
+
         this.showElement('loginScreen', false);
         this.showElement('mainContainer', true);
-        
+
         const userDisplayElement = document.getElementById('userDisplayName');
         if (userDisplayElement) {
             userDisplayElement.textContent = 'Demo Bruker v2.5';
         }
-        
+
         this.startClock();
         this.broadcastSchedule = this.createDemoSchedule();
         this.updateScheduleDisplay();
         this.startScheduleChecker();
         this.startNewsRotation();
-        
+
         this.updateDataverseStatus('Demo-modus aktiv v2.5');
         this.showError('Kjører i demo-modus - begrensede funksjoner');
     }
 
     updateDataverseStatus(status) {
-        const timestamp = new Date().toLocaleTimeString('no-NO', { 
-            hour: '2-digit', 
+        const timestamp = new Date().toLocaleTimeString('no-NO', {
+            hour: '2-digit',
             minute: '2-digit'
         });
         const statusElement = document.getElementById('dataverseStatus');
@@ -1204,7 +1115,7 @@ programtype`]);
     showLoading(show) {
         const loadingEl = document.getElementById('loginLoading');
         const buttonEl = document.getElementById('loginBtn');
-        
+
         if (loadingEl && buttonEl) {
             loadingEl.style.display = show ? 'block' : 'none';
             buttonEl.style.display = show ? 'none' : 'block';
@@ -1241,9 +1152,9 @@ programtype`]);
     toggleAudio() {
         const video = document.getElementById('realVideo');
         const audioToggleBtn = document.getElementById('audioToggleBtn');
-        
+
         if (!video || !audioToggleBtn) return;
-        
+
         if (video.muted) {
             video.muted = false;
             video.volume = 1.0;
@@ -1271,17 +1182,17 @@ window.BroadcastUtils = {
         const secs = seconds % 60;
         return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
     },
-    
+
     formatTimeUntil: (targetTime) => {
         const now = new Date();
         const diff = Math.ceil((targetTime - now) / 1000);
-        
+
         if (diff <= 0) return 'Nå';
         if (diff < 60) return `${diff}s`;
         if (diff < 3600) return `${Math.ceil(diff / 60)}m`;
         return `${Math.ceil(diff / 3600)}t`;
     },
-    
+
     isToday: (date) => {
         const today = new Date();
         return date.toDateString() === today.toDateString();
@@ -1319,7 +1230,7 @@ window.emergencyStopVideo = function() {
         video.load();
         console.log('Emergency video stop executed');
     }
-    
+
     if (window.broadcastApp) {
         window.broadcastApp.endProgram();
     }
@@ -1332,41 +1243,15 @@ window.emergencyStopVideo = function() {
     console.log('🎥 Anti-Loop: AGGRESSIVE MODE ENABLED');
     console.log('🔊 Audio: ENABLED BY DEFAULT');
     console.log('🛑 Emergency functions: testVideo(), emergencyStopVideo()');
-    
+
     if (typeof window === 'undefined') {
         console.error('❌ Window object not available');
         return;
     }
-    
+
     const cacheVersion = 'v2.5-no-loop-audio-' + new Date().getTime();
     window.broadcastAppVersion = cacheVersion;
     console.log('🔄 Cache Version:', cacheVersion);
-    
+
     console.log('✅ App.js v2.5 ready for initialization');
-})();
-
-
-// ---- DEBUG: simple video test panel (remove or toggle as needed) ----
-(function addVideoTestPanel(){
-  try{
-    if (document.getElementById('videoTestPanel')) return;
-    const panel = document.createElement('div');
-    panel.id = 'videoTestPanel';
-    Object.assign(panel.style, {
-      position:'fixed', left:'1rem', bottom:'1rem', zIndex:'9998',
-      display:'grid', gap:'0.5rem', padding:'0.5rem', background:'rgba(0,0,0,0.4)', borderRadius:'8px'
-    });
-    const urls = [
-      {label:'OpenCare.mp4', url:'https://poweraitestaistorage.blob.core.windows.net/videos/OpenCare.mp4'},
-      {label:'How.mp4',     url:'https://poweraitestaistorage.blob.core.windows.net/videos/How.mp4'}
-    ];
-    urls.forEach(u=>{
-      const b=document.createElement('button');
-      b.textContent='Spill: '+u.label;
-      Object.assign(b.style,{padding:'0.4rem 0.6rem', borderRadius:'8px', cursor:'pointer'});
-      b.onclick=()=>{ try { window.app && app.tryLoadRealVideo ? app.tryLoadRealVideo(u.url, 'news') : console.warn('app.tryLoadRealVideo not found'); } catch(e){ console.warn(e);} };
-      panel.appendChild(b);
-    });
-    document.body.appendChild(panel);
-  }catch(e){ console.warn('Debug panel error', e); }
 })();
