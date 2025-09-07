@@ -1,31 +1,42 @@
 // video.js
-export const onLoaded = () => {
-    console.log('✅ loadeddata:', { readyState: video.readyState });
-    video.loop = false;
-    const p = video.play();
-    if (p && p.catch) p.catch(e => console.warn('play() catch:', e));
-  };
-export const onError = () => {
-    const err = video.error;
-    console.warn('❌ video error', {
-      code: err && err.code,
-      networkState: video.networkState,
-      readyState: video.readyState,
-      url: videoUrl
-    });
-    if (typeof this.showAnimatedProgram === 'function') {
-      this.showAnimatedProgram(programType);
+// Provide generic video event handlers that can be bound with dependencies.
+export function createVideoHandlers(videoEl, { programType, videoUrl, onShowAnimatedProgram } = {}) {
+  const onLoaded = () => {
+    try {
+      const p = videoEl.play();
+      if (p && p.catch) p.catch(e => console.warn('play() catch:', e));
+    } catch (e) {
+      console.warn('play() error', e);
     }
   };
-export const onEnded = () => {
+
+  const onEnded = () => {
     console.log('📺 ended');
-    video.pause();
-    video.currentTime = 0;
+    try {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+    } catch {}
   };
 
-export function wireVideoEvents(videoEl) {
-  if (!videoEl) return;
-  videoEl.addEventListener('loadeddata', onLoaded);
-  videoEl.addEventListener('error', onError);
-  videoEl.addEventListener('ended', onEnded);
+  const onError = () => {
+    const err = videoEl.error;
+    console.warn('❌ video error', {
+      code: err && err.code,
+      networkState: videoEl.networkState,
+      readyState: videoEl.readyState,
+      url: videoUrl
+    });
+    if (typeof onShowAnimatedProgram === 'function') {
+      onShowAnimatedProgram(programType);
+    }
+  };
+  return { onLoaded, onEnded, onError };
+}
+
+export function wireVideoEvents(videoEl, handlers) {
+  if (!videoEl || !handlers) return;
+  const { onLoaded, onEnded, onError } = handlers;
+  if (onLoaded) videoEl.addEventListener('loadeddata', onLoaded, { once: true });
+  if (onEnded) videoEl.addEventListener('ended', onEnded);
+  if (onError) videoEl.addEventListener('error', onError);
 }

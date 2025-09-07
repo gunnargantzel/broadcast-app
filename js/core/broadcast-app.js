@@ -1,3 +1,6 @@
+import { startClock } from '../modules/clock.js';
+import { startNewsRotation } from '../modules/news.js';
+import { wireVideoEvents, createVideoHandlers } from '../modules/video.js';
 // core/broadcast-app.js
 class AzureBroadcastApp {
     constructor() {
@@ -401,23 +404,18 @@ class AzureBroadcastApp {
     }
 
     startClock() {
-        const updateClock = () => {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('no-NO', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            const clockElement = document.getElementById('currentTime');
-            if (clockElement) {
-                clockElement.textContent = timeString;
-            }
-        };
-        
-        updateClock();
-        setInterval(updateClock, 1000);
-        console.log('🕒 Clock started');
-    }
+
+        try {
+            // Delegate to module
+            import('../modules/clock.js').then(m => {
+                m.startClock();
+                console.log('🕒 Clock started (module)');
+            }).catch(e => console.warn('Clock module failed', e));
+        } catch (e) {
+            console.warn('Clock module init failed', e);
+        }
+
+}
 
     startScheduleChecker() {
         this.scheduleCheckInterval = setInterval(() => {

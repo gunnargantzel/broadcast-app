@@ -24,7 +24,7 @@
     
     <!-- Preload critical resources -->
     <link rel="preload" href="/css/styles.css" as="style">
-    <link rel="preload" href="/js/main.js" as="script">
+    <link rel="modulepreload" href="/js/main.js" as="script">
     <link rel="preconnect" href="https://alcdn.msauth.net">
     <link rel="preconnect" href="https://login.microsoftonline.com">
     <link rel="preconnect" href="https://beredskap360utv.api.crm4.dynamics.com">
@@ -248,24 +248,7 @@
                     return;
                 }
                 
-                const script = document.createElement('script');
-                script.src = msalUrls[currentUrl];
-                script.defer = true;
-                script.crossOrigin = 'anonymous';
-                
-                script.onload = function() {
-                    console.log('✅ MSAL loaded successfully from:', msalUrls[currentUrl]);
-                    document.getElementById('loaderStatus').textContent = 'Laster applikasjon...';
-                    loadAppScript();
-                };
-                
-                script.onerror = function() {
-                    console.warn('⚠️ Failed to load MSAL from:', msalUrls[currentUrl]);
-                    currentUrl++;
-                    setTimeout(loadMsal, 1000); // Wait 1 second before trying next URL
-                };
-                
-                document.head.appendChild(script);
+                // Removed dynamic script injection - using static module import
             }
             
             loadMsal();
@@ -273,26 +256,7 @@
         
         // Load main app script
         function loadAppScript() {
-            const script = document.createElement('script');
-            script.src = '/js/main.js';
-            script.defer = true;
-            
-            script.onload = function() {
-                console.log('✅ App script loaded successfully');
-                document.getElementById('loaderStatus').textContent = 'Starter applikasjon...';
-                // App will initialize via DOMContentLoaded
-            };
-            
-            script.onerror = function() {
-                console.error('❌ Failed to load app script');
-                document.getElementById('loaderStatus').textContent = 'Feil ved lasting av applikasjon';
-                setTimeout(() => {
-                    document.getElementById('loginError').textContent = 'Kunne ikke laste applikasjon. Sjekk at alle filer er riktig deployet.';
-                    hideInitialLoader();
-                }, 2000);
-            };
-            
-            document.head.appendChild(script);
+            // Removed dynamic script injection - using static module import
         }
     </script>
 
