@@ -1039,3 +1039,7 @@ class AzureBroadcastApp {
 }
 
 export default AzureBroadcastApp;
+
+
+// Expose class globally for legacy checks
+if (typeof window !== 'undefined') { window.AzureBroadcastApp = AzureBroadcastApp; }
