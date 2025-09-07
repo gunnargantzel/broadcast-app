@@ -24,7 +24,7 @@
     
     <!-- Preload critical resources -->
     <link rel="preload" href="/css/styles.css" as="style">
-    <link rel="preload" href="/js/app.js" as="script">
+    <link rel="preload" href="/js/main.js" as="script">
     <link rel="preconnect" href="https://alcdn.msauth.net">
     <link rel="preconnect" href="https://login.microsoftonline.com">
     <link rel="preconnect" href="https://beredskap360utv.api.crm4.dynamics.com">
@@ -274,7 +274,7 @@
         // Load main app script
         function loadAppScript() {
             const script = document.createElement('script');
-            script.src = '/js/app.js';
+            script.src = '/js/main.js';
             script.defer = true;
             
             script.onload = function() {
@@ -470,5 +470,6 @@
         console.log('   Build Time:', new Date().toISOString());
         console.log('   Client ID: e7174676-e8bb-446b-9260-af3f28086458');
     </script>
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>
