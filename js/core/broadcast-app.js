@@ -3,7 +3,8 @@ import { startNewsRotation } from '../modules/news.js';
 import { wireVideoEvents, createVideoHandlers } from '../modules/video.js';
 // core/broadcast-app.js
 class AzureBroadcastApp {
-    constructor() {
+    constructor(options = {}) {
+        this.msalInstance = options.msalInstance || this.msalInstance || null;
         console.log('🎬 Initializing AzureBroadcastApp v2.5 - NO LOOP + AUDIO...');
         
         if (!msalInstance) {
@@ -1042,4 +1043,8 @@ export default AzureBroadcastApp;
 
 
 // Expose class globally for legacy checks
-if (typeof window !== 'undefined') { window.AzureBroadcastApp = AzureBroadcastApp; }
+if (typeof window !== 'undefined') { window.AzureBroadcastApp = AzureBroadcastApp; 
+    setMsal(msalInstance) {
+        this.msalInstance = msalInstance;
+    }
+}

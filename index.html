@@ -227,11 +227,9 @@
         
         (function() {
             const msalUrls = [
-                // Microsoft CDN (latest available version)
+                '/vendor/msal/msal-browser.min.js', // local fallback (place file here)
                 'https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js',
                 'https://alcdn.msftauth.net/browser/2.35.0/js/msal-browser.min.js',
-                // Third-party CDNs with newer versions
-                'https://unpkg.com/@azure/msal-browser@3.24.0/lib/msal-browser.min.js',
                 'https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.24.0/lib/msal-browser.min.js'
             ];
             
@@ -277,21 +275,46 @@
         }
 
         // Initialize application
-        function initializeApp() {
-            console.log('🚀 Starting Azure Static Web App Broadcast System...');
-            console.log('🌍 Environment: Production (Static Web App)');
-            console.log('🔗 CDN: Azure Global Network');
-            console.log('🔐 Authentication: Microsoft MSAL.js');
-            console.log('🗃️ Data Source: Microsoft Dataverse');
-            console.log('🔑 Client ID: e7174676-e8bb-446b-9260-af3f28086458');
-            
-            // Check if all required dependencies are loaded
-            if (typeof msal === 'undefined') {
-                console.error('❌ MSAL library not loaded');
-                document.getElementById('loginError').textContent = 'Authentication library ikke lastet. Prøv å oppdatere siden.';
+        
+        function waitForMsal(timeout = 15000) {
+            return new Promise((resolve, reject) => {
+                const start = Date.now();
+                (function check() {
+                    if (typeof window.msal !== 'undefined') return resolve(window.msal);
+                    if (Date.now() - start > timeout) return reject(new Error('MSAL not loaded'));
+                    setTimeout(check, 100);
+                })();
+            });
+        }
+
+        async function initializeApp() {
+            try {
+                // Ensure MSAL library is present
+                const msalGlobal = await waitForMsal();
+                const { PublicClientApplication } = msalGlobal;
+                const msalInstance = new PublicClientApplication(window.msalConfig || msalConfig);
+                window.msalInstance = msalInstance;
+
+                // Dynamically import the ESM app and boot with msalInstance
+                const mod = await import('/js/main.js');
+                if (mod && typeof mod.boot === 'function') {
+                    await mod.boot(msalInstance);
+                } else {
+                    console.warn('main.js did not export boot(msalInstance)');
+                }
+                console.log('✅ Application initialized with MSAL');
                 hideInitialLoader();
-                return;
+            } catch (error) {
+                console.error('❌ Failed to initialize application:', error);
+                const el = document.getElementById('loginError');
+                if (el) {
+                    el.textContent = 'Kunne ikke starte applikasjon: ' + (error.message || 'Ukjent feil');
+                    el.style.display = 'block';
+                }
+                hideInitialLoader();
             }
+        }
+    
 
             if (typeof AzureBroadcastApp === 'undefined') {
                 console.error('❌ AzureBroadcastApp class not found');
@@ -434,6 +457,6 @@
         console.log('   Build Time:', new Date().toISOString());
         console.log('   Client ID: e7174676-e8bb-446b-9260-af3f28086458');
     </script>
-  <script type="module" src="/js/main.js"></script>
+  
 </body>
 </html>
