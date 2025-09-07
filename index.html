@@ -270,7 +270,9 @@
                 loader.style.opacity = '0';
                 setTimeout(() => {
                     loader.style.display = 'none';
-                }
+                }, 300);
+            }
+        }
 
         // --- wait for MSAL UMD global ---
         function waitForMsal(timeout = 15000) {
@@ -299,104 +301,6 @@
                     console.warn('main.js did not export boot(msalInstance)');
                 }
 
-                console.log('✅ Application initialized with MSAL');
-                hideInitialLoader();
-            } catch (error) {
-                console.error('❌ Failed to initialize application:', error);
-                const el = document.getElementById('loginError');
-                if (el) {
-                    el.textContent = 'Kunne ikke starte applikasjon: ' + (error.message || 'Ukjent feil');
-                    el.style.display = 'block';
-                }
-                hideInitialLoader();
-            }
-        }
-
-        // --- DOM ready logic ---
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('📄 DOM loaded, checking script dependencies...');
-            let attempts = 0, maxAttempts = 20;
-            const check = setInterval(() => {
-                attempts++;
-                if (typeof AzureBroadcastApp !== 'undefined' && typeof msal !== 'undefined') {
-                    clearInterval(check);
-                    initializeApp();
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(check);
-                    let missing = [];
-                    if (typeof msal === 'undefined') missing.push('MSAL.js');
-                    if (typeof AzureBroadcastApp === 'undefined') missing.push('App.js');
-                    const el = document.getElementById('loginError');
-                    if (el) {
-                        el.textContent = `Kunne ikke laste: ${missing.join(', ')}. Sjekk internettforbindelsen og prøv igjen.`;
-                        el.style.display = 'block';
-                    }
-                    hideInitialLoader();
-                }
-            }, 500);
-        });
-, 300);
-            }
-        }
-
-        // Initialize application
-        
-        )();
-            });
-        }
-
-        async  else {
-                    console.warn('main.js did not export boot(msalInstance)');
-                }
-                console.log('✅ Application initialized with MSAL');
-                hideInitialLoader();
-            } catch (error) {
-                console.error('❌ Failed to initialize application:', error);
-                const el = document.getElementById('loginError');
-                if (el) {
-                    el.textContent = 'Kunne ikke starte applikasjon: ' + (error.message || 'Ukjent feil');
-                    el.style.display = 'block';
-                }
-                hideInitialLoader();
-            }
-        }
-    
-
-            if (typeof AzureBroadcastApp === 'undefined') {
-                console.error('❌ AzureBroadcastApp class not found');
-                document.getElementById('loginError').textContent = 'Applikasjon ikke lastet. Sjekk at js/app.js er tilgjengelig.';
-                hideInitialLoader();
-                return;
-            }
-            
-            try {
-                // Start the application
-                window.broadcastApp = new AzureBroadcastApp();
-                console.log('✅ Application initialized successfully');
-                hideInitialLoader();
-            } catch (error) {
-                console.error('❌ Failed to initialize application:', error);
-                document.getElementById('loginError').textContent = 'Kunne ikke starte applikasjon: ' + error.message;
-                hideInitialLoader();
-            }
-        }
-
-        // Wait for DOM and all scripts to be ready
-        
-        )();
-            });
-        }
-
-        = msalGlobal;
-                const msalInstance = new PublicClientApplication(window.msalConfig || msalConfig);
-                window.msalInstance = msalInstance;
-
-                const mod = await import('/js/main.js');
-                if (mod && typeof mod.boot === 'function') {
-                    await mod.boot(msalInstance);
-                } else {
-                    console.warn('main.js did not export boot(msalInstance)');
-                }
                 console.log('✅ Application initialized with MSAL');
                 hideInitialLoader();
             } catch (error) {
