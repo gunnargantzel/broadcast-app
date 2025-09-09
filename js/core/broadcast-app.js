@@ -1,5 +1,5 @@
 import { startClock } from '../modules/clock.js';
-import { startNewsRotation } from '../modules/news.js';
+import { startNewsRotation, updateNewsItems } from '../modules/news.js';
 import { wireVideoEvents, createVideoHandlers } from '../modules/video.js';
 // core/broadcast-app.js
 class AzureBroadcastApp {
@@ -784,15 +784,8 @@ class AzureBroadcastApp {
 
     // NEWS HANDLING
     startNewsRotation() {
-        const rotateNews = () => {
-            this.currentNewsIndex = (this.currentNewsIndex + 1) % this.newsItems.length;
-            const newsElement = document.getElementById('newsText');
-            if (newsElement) {
-                newsElement.textContent = this.newsItems[this.currentNewsIndex];
-            }
-        };
-        
-        setInterval(rotateNews, 8000);
+        // Use the enhanced news module
+        startNewsRotation(8000);
         this.loadNewsFromDataverse();
         
         setInterval(() => {
@@ -802,7 +795,7 @@ class AzureBroadcastApp {
             }
         }, 5 * 60 * 1000);
         
-        console.log('📰 News rotation started');
+        console.log('📰 Enhanced news rotation started with stable speed');
     }
 
     async loadNewsFromDataverse() {
@@ -840,9 +833,9 @@ class AzureBroadcastApp {
             const query = `${dataverseConfig.webApiEndpoint}/${dataverseConfig.tablePrefix}newsitems?` +
                 `$filter=${dataverseConfig.tablePrefix}isactive eq true and ` +
                 `(${dataverseConfig.tablePrefix}expirydate eq null or ${dataverseConfig.tablePrefix}expirydate gt ${now})&` +
-                `$orderby=${dataverseConfig.tablePrefix}priority desc,${dataverseConfig.tablePrefix}publishdate desc&` +
+                `$orderby=${dataverseConfig.tablePrefix}publishdate desc,${dataverseConfig.tablePrefix}priority desc&` +
                 `$top=20&` +
-                `$select=${dataverseConfig.tablePrefix}headline,${dataverseConfig.tablePrefix}name,${dataverseConfig.tablePrefix}category,${dataverseConfig.tablePrefix}source`;
+                `$select=${dataverseConfig.tablePrefix}headline,${dataverseConfig.tablePrefix}name,${dataverseConfig.tablePrefix}category,${dataverseConfig.tablePrefix}source,${dataverseConfig.tablePrefix}publishdate`;
             
             const response = await fetch(query, { headers });
             
@@ -869,6 +862,26 @@ class AzureBroadcastApp {
                             newsText = `${categoryEmojis[category]} ${newsText}`;
                         }
                         
+                        // Add publication date
+                        const publishDate = item[`${dataverseConfig.tablePrefix}publishdate`];
+                        if (publishDate) {
+                            const date = new Date(publishDate);
+                            const now = new Date();
+                            const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
+                            
+                            let timeAgo;
+                            if (diffHours < 1) {
+                                timeAgo = 'nettopp';
+                            } else if (diffHours < 24) {
+                                timeAgo = `${diffHours}t siden`;
+                            } else {
+                                const diffDays = Math.floor(diffHours / 24);
+                                timeAgo = `${diffDays}d siden`;
+                            }
+                            
+                            newsText += ` • ${timeAgo}`;
+                        }
+                        
                         const source = item[`${dataverseConfig.tablePrefix}source`];
                         if (source) {
                             newsText += ` (${source})`;
@@ -877,7 +890,10 @@ class AzureBroadcastApp {
                         return newsText;
                     });
                     
-                    console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse`);
+                    // Update the news module with the new items
+                    updateNewsItems(this.newsItems);
+                    
+                    console.log(`✅ Loaded ${this.newsItems.length} news items from Dataverse (newest first)`);
                 } else {
                     this.setFallbackNews();
                 }
@@ -892,19 +908,22 @@ class AzureBroadcastApp {
 
     setFallbackNews() {
         this.newsItems = [
-            '📺 Azure Static Web App Broadcast System v2.5 - Anti-Loop + Audio Enabled',
-            '🔊 Videoer spilles nå av med lyd når tilgjengelig',
-            '🚫 Aggressiv anti-loop teknologi implementert',
-            '🌐 Norsk TV sender direkte fra Microsoft Azure Cloud Platform',
-            '🔄 Automatisk program-scheduling fra Dataverse database',
-            '🔒 Enterprise sikkerhet med Microsoft Authentication',
-            '📊 Real-time oppdateringer og automatisk failover',
-            '🚀 Global deployment via Azure Static Web Apps',
-            '⚡ Power Platform integrasjon for enkel administrasjon',
-            '🎥 Støtte for lange blob storage URLs med SAS tokens'
+            '📺 Azure Static Web App Broadcast System v2.5 - Anti-Loop + Audio Enabled • nettopp',
+            '🔊 Videoer spilles nå av med lyd når tilgjengelig • 1t siden',
+            '🚫 Aggressiv anti-loop teknologi implementert • 2t siden',
+            '🌐 Norsk TV sender direkte fra Microsoft Azure Cloud Platform • 3t siden',
+            '🔄 Automatisk program-scheduling fra Dataverse database • 4t siden',
+            '🔒 Enterprise sikkerhet med Microsoft Authentication • 5t siden',
+            '📊 Real-time oppdateringer og automatisk failover • 6t siden',
+            '🚀 Global deployment via Azure Static Web Apps • 1d siden',
+            '⚡ Power Platform integrasjon for enkel administrasjon • 1d siden',
+            '🎥 Støtte for lange blob storage URLs med SAS tokens • 1d siden'
         ];
         
-        console.log('📰 Using fallback news items v2.5');
+        // Update the news module with fallback items
+        updateNewsItems(this.newsItems);
+        
+        console.log('📰 Using fallback news items v2.5 with publication dates');
     }
 
     // Utility methods
